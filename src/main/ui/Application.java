@@ -1,6 +1,8 @@
 package ui;
 
+import com.googlecode.lanterna.Symbols;
 import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import model.Player;
@@ -23,6 +25,26 @@ public class Application {
 
         createMainMenu();
         setMainMenu();
+    }
+
+    public static void drawBox(TextGraphics textGraphics, int x, int y, int width, int height) {
+        textGraphics.putString(x, y, "╭");
+        textGraphics.putString(x + width, y, "╮");
+        textGraphics.putString(x, y + height, "╰");
+        textGraphics.putString(x + width, y + height, "╯");
+        for (int i = 1; i < width; i++) {
+            for (int j = 1; j < height; j++) {
+                textGraphics.putString(x + i, y + j, " ");
+            }
+        }
+        for (int i = 1; i < height; i++) {
+            textGraphics.putString(x, y + i, String.valueOf(Symbols.SINGLE_LINE_VERTICAL));
+            textGraphics.putString(x + width, y + i, String.valueOf(Symbols.SINGLE_LINE_VERTICAL));
+        }
+        for (int i = 1; i < width; i++) {
+            textGraphics.putString(x + i, y, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
+            textGraphics.putString(x + i, y + height, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
+        }
     }
 
     public void start() throws Exception {

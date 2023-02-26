@@ -141,7 +141,7 @@ public class MainMenu implements Scene {
             if (keyStroke != null) {
                 switch (keyStroke.getKeyType()) {
                     case Enter:
-                        return new Player(name, null, 0, 200);
+                        return new Player(i, name, null, 0, 200);
                     case Escape:
                         throw new Exception();
                     default:
@@ -149,7 +149,7 @@ public class MainMenu implements Scene {
                         break;
                 }
             }
-            drawPlayerBox(textGraphics, x, y, width, height);
+            Application.drawBox(textGraphics, x, y, width, height);
             textGraphics.putString(x + 3,y + 1, textBox);
             screen.refresh();
         }
@@ -174,26 +174,6 @@ public class MainMenu implements Scene {
         return (s == null || s.length() == 0)
                 ? ""
                 : (s.substring(0, s.length() - 1));
-    }
-
-    private void drawPlayerBox(TextGraphics textGraphics, int x, int y, int width, int height) {
-        textGraphics.putString(x, y, "╭");
-        textGraphics.putString(x + width, y, "╮");
-        textGraphics.putString(x, y + height, "╰");
-        textGraphics.putString(x + width, y + height, "╯");
-        for (int i = 1; i < width; i++) {
-            for (int j = 1; j < height; j++) {
-                textGraphics.putString(x + i, y + j, " ");
-            }
-        }
-        for (int i = 1; i < height; i++) {
-            textGraphics.putString(x, y + i, String.valueOf(Symbols.SINGLE_LINE_VERTICAL));
-            textGraphics.putString(x + width, y + i, String.valueOf(Symbols.SINGLE_LINE_VERTICAL));
-        }
-        for (int i = 1; i < width; i++) {
-            textGraphics.putString(x + i, y, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
-            textGraphics.putString(x + i, y + height, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
-        }
     }
 
     @Override

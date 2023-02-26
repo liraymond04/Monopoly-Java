@@ -13,6 +13,8 @@ public class Player {
         YELLOW
     }
 
+    private int index;
+
     private String name;
     private Color color;
     private int currentSquare;
@@ -20,11 +22,16 @@ public class Player {
     private int balance;
     private ArrayList<PropertySquare> properties;
 
-    public Player(String name, Color color, int currentSquare, int balance) {
+    public Player(int index, String name, Color color, int currentSquare, int balance) {
+        this.index = index;
         this.name = name;
         this.color = color;
         this.currentSquare = currentSquare;
         this.balance = balance;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public String getName() {
@@ -39,13 +46,18 @@ public class Player {
         currentSquare = square;
     }
 
-
     public int getBalance() {
         return balance;
     }
 
-    public void setBalance(int balance) {
-        this.balance = balance;
+    public int addBalance(int balance) {
+        this.balance += balance;
+        return this.balance;
+    }
+
+    public int removeBalance(int balance) {
+        this.balance -= balance;
+        return this.balance;
     }
 
 }

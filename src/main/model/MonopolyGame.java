@@ -22,6 +22,11 @@ public class MonopolyGame {
 
         // init board
         board = initBoard();
+
+        for (Player player : players) {
+            board.get(0).addPlayer(player);
+            player.setCurrentSquare(0);
+        }
     }
 
     @SuppressWarnings("methodlength")
@@ -135,6 +140,27 @@ public class MonopolyGame {
             currentRound++;
         }
         return getCurrentPlayer();
+    }
+
+    public boolean movePlayer(Player player, int move) {
+        int currentSquare = player.getCurrentSquare();
+        board.get(currentSquare).removePlayer(player);
+        int moveAmount = currentSquare + move;
+        int newSquare = moveAmount % board.size();
+        board.get(newSquare).addPlayer(player);
+        player.setCurrentSquare(newSquare);
+        return moveAmount > newSquare;
+    }
+
+    public String testLand(int index) {
+        Square square = board.get(index);
+        square.landedOn(null);
+        if (square instanceof PropertySquare) {
+            PropertySquare propertySquare = (PropertySquare) square;
+            propertySquare.addHouse();
+            return String.valueOf(propertySquare.getNumberOfHouses());
+        }
+        return square.getName();
     }
 
     public ArrayList<Square> getBoard() {

@@ -13,11 +13,13 @@ import model.square.PropertySquare;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 public class GameScene implements Scene {
 
     enum GameState {
-        SELECT_TURN_OPTION
+        SELECT_TURN_OPTION,
+        ROLLING_DICE
     }
 
     private GameState gameState;
@@ -30,6 +32,9 @@ public class GameScene implements Scene {
 
     private int currentTurnOption = 0;
     private int maxTurnOption = 5;
+
+    private int rollAmount;
+    private boolean alreadyRolled = false;
 
     ArrayList<String> boardRender;
 
@@ -102,6 +107,10 @@ public class GameScene implements Scene {
                     result &= handleSelectTurnOptionArrowInput(keyStroke)
                             && handleSelectTurnOptionEnterInput(keyStroke);
                     break;
+                case ROLLING_DICE:
+                    gameState = GameState.SELECT_TURN_OPTION;
+                    alreadyRolled = true;
+                    break;
             }
             result &= handleDebugInput(keyStroke);
         }
@@ -133,6 +142,7 @@ public class GameScene implements Scene {
             case Enter:
                 switch (currentTurnOption) {
                     case 0: // roll dice
+                        rollDice();
                         break;
                     case 1: // mortgage
                         break;
@@ -143,12 +153,31 @@ public class GameScene implements Scene {
                     case 4: // sell house
                         break;
                     case 5: // end turn
-                        monopolyGame.nextPlayer();
+                        endTurn();
                         break;
                 }
                 break;
         }
         return true;
+    }
+
+    private void rollDice() {
+        gameState = GameState.ROLLING_DICE;
+        if (alreadyRolled) {
+            return;
+        }
+        rollAmount = new Random().nextInt(12) + 1;
+        Player player = monopolyGame.getCurrentPlayer();
+        if (monopolyGame.movePlayer(player, rollAmount)) {
+            player.addBalance(200);
+        }
+    }
+
+    private void endTurn() {
+        monopolyGame.nextPlayer();
+        gameState = GameState.SELECT_TURN_OPTION;
+        alreadyRolled = false;
+        currentTurnOption = 0;
     }
 
     private boolean handleDebugInput(KeyStroke keyStroke) {
@@ -163,6 +192,9 @@ public class GameScene implements Scene {
                 if (keyStroke.getCharacter() == 'g') {
                     System.out.println(monopolyGame.nextPlayer().getName());
                 }
+                if (keyStroke.getCharacter() == 't') {
+                    System.out.println(monopolyGame.getCurrentPlayer().getBalance());
+                }
                 break;
             case Escape:
                 return false;
@@ -176,6 +208,8 @@ public class GameScene implements Scene {
     public boolean update() {
         switch (gameState) {
             case SELECT_TURN_OPTION:
+                break;
+            case ROLLING_DICE:
                 break;
         }
 
@@ -198,13 +232,17 @@ public class GameScene implements Scene {
 
         textGraphics.putString(9, 0, String.valueOf(monopolyGame.getCurrentRound()));
 
+        renderPlayerTurn(textGraphics, 20, 8);
         switch (gameState) {
             case SELECT_TURN_OPTION:
-                renderPlayerTurn(textGraphics, 20, 8);
+                break;
+            case ROLLING_DICE:
+//                renderPlayerTurn(textGraphics, 20, 8);
+                renderRollingDice(textGraphics, 28, 12);
                 break;
         }
 
-        boardRender(textGraphics, 79, 34, 7, 3, 5, 0, true,
+        boardRender(textGraphics, 79, 34, 7, 3, 5, 0,
                 String.valueOf(Symbols.BLOCK_SOLID), null);
 
         return true;
@@ -217,12 +255,30 @@ public class GameScene implements Scene {
         int offsetX = 2;
         int offsetY = 2;
 
+        // TODO
+        //  - require player to roll to end turn
+        //  - add alert window when passing GO
+
+        if (alreadyRolled) {
+            textGraphics.setForegroundColor(TextColor.ANSI.RED);
+        }
         textGraphics.putString(startX + offsetX, startY + offsetY, getTurnOption(0) + "Roll dice");
+        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
         textGraphics.putString(startX + offsetX, startY + offsetY + 1, getTurnOption(1) + "Mortgage");
         textGraphics.putString(startX + offsetX, startY + offsetY + 2, getTurnOption(2) + "Lift mortgage");
         textGraphics.putString(startX + offsetX, startY + offsetY + 3, getTurnOption(3) + "Sell property");
         textGraphics.putString(startX + offsetX, startY + offsetY + 4, getTurnOption(4) + "Sell house");
         textGraphics.putString(startX + offsetX, startY + offsetY + 5, getTurnOption(5) + "End Turn");
+    }
+
+    private void renderRollingDice(TextGraphics textGraphics, int startX, int startY) {
+        Application.drawBox(textGraphics, startX, startY, 34, 4);
+        if (!alreadyRolled) {
+            textGraphics.putString(startX + 2, startY + 1, "Rolled a " + rollAmount);
+        } else {
+            textGraphics.putString(startX + 2, startY + 1, "Player has already rolled");
+        }
+        textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
     private String getTurnOption(int turnOption) {
@@ -231,36 +287,32 @@ public class GameScene implements Scene {
 
     private void boardRender(TextGraphics textGraphics,
                              int startX, int startY, int horizontalSize, int verticalSize,
-                             int horizontalOffset, int verticalOffset, boolean onlyProperty,
+                             int horizontalOffset, int verticalOffset,
                              String s, TextColor color) {
         int length = (board.size() + 1) / 4;
         boardRenderRows(textGraphics, startX, startY, length,
-                -horizontalSize, 0, horizontalOffset, verticalOffset,  onlyProperty, 0, s, color);
+                -horizontalSize, 0, horizontalOffset, verticalOffset, 0, s, color);
         boardRenderRows(textGraphics, startX - length * horizontalSize, startY, length,
-                0, -verticalSize, horizontalOffset, verticalOffset, onlyProperty, length, s, color);
+                0, -verticalSize, horizontalOffset, verticalOffset, length, s, color);
         boardRenderRows(textGraphics, startX - length * horizontalSize, startY - length * verticalSize, length,
-                horizontalSize, 0, horizontalOffset, verticalOffset,  onlyProperty, length * 2, s, color);
+                horizontalSize, 0, horizontalOffset, verticalOffset, length * 2, s, color);
         boardRenderRows(textGraphics, startX, startY - (length - 1) * verticalSize, length - 1,
-                0, verticalSize, horizontalOffset, verticalOffset, onlyProperty, length * 3, s, color);
+                0, verticalSize, horizontalOffset, verticalOffset, length * 3, s, color);
     }
 
     private void boardRenderRows(TextGraphics textGraphics,
                                  int startX, int startY, int length,
                                  int horizontalMove, int verticalMove,
-                                 int horizontalOffset, int verticalOffset,
-                                 boolean onlyProperty, int iterateStart,
+                                 int horizontalOffset, int verticalOffset, int iterateStart,
                                  String s, TextColor c) {
         for (int i = 0; i < length; i++) {
             Square square = board.get(i + iterateStart);
             TextColor color = c;
 
-            if (onlyProperty && !(square instanceof PropertySquare)) {
-                continue;
-            }
+            boolean isProperty = square instanceof PropertySquare;
 
             int houses = 0;
-
-            if (square instanceof PropertySquare) {
+            if (isProperty) {
                 PropertySquare propertySquare = (PropertySquare) square;
                 TextColor propertyColor = propertySquare.getType().toColor();
                 if (color == null && propertyColor != null) {
@@ -268,13 +320,36 @@ public class GameScene implements Scene {
                 }
                 houses = propertySquare.getNumberOfHouses();
             }
-            textGraphics.setForegroundColor(color);
-            textGraphics.putString(startX + i * horizontalMove + horizontalOffset,
-                    startY + i * verticalMove + verticalOffset, s);
+            squareRender(textGraphics, square, isProperty, startX, startY, horizontalMove, verticalMove,
+                    horizontalOffset, verticalOffset, s, color, i, houses);
+        }
+    }
+
+    private void squareRender(TextGraphics textGraphics,
+                              Square square, boolean isProperty,
+                              int startX, int startY,
+                              int horizontalMove, int verticalMove,
+                              int horizontalOffset, int verticalOffset,
+                              String s, TextColor color, int i, int houses) {
+        int drawX = startX + i * horizontalMove;
+        int drawY = startY + i * verticalMove;
+        textGraphics.setForegroundColor(color);
+
+        if (isProperty) {
+            textGraphics.putString(drawX + horizontalOffset, drawY + verticalOffset, s);
             if (houses > 0) {
-                textGraphics.putString(startX + i * horizontalMove + horizontalOffset,
-                        startY + i * verticalMove + verticalOffset + 1, houses > 4 ? "H" :  String.valueOf(houses));
+                textGraphics.putString(drawX + horizontalOffset, drawY + verticalOffset + 1,
+                        houses > 4 ? "H" : String.valueOf(houses));
             }
+        }
+
+        int index = 0;
+        int maxInLine = 4;
+        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
+        for (Player player : square.getPlayers()) {
+            textGraphics.putString(drawX + index % maxInLine, drawY + index / maxInLine,
+                    String.valueOf(player.getIndex() + 1));
+            index++;
         }
     }
 

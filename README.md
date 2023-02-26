@@ -33,14 +33,14 @@ limits as a programmer.
 
 ## User Stories
 
-- As a user, I want to be able to choose how many players to start a game with
-- As a user, I want to be able to roll dice to choose how many squares to move
+- As a user, I want to be able to choose how many players to start a game with ✓
+- As a user, I want to be able to roll dice to choose how many squares to move ✓
 - As a user, I want to be able to buy or auction un-owned properties that I land on
 - As a user, I want to be able to pay rent to players whose un-mortgaged properties I land on
 - As a user, I want to be able to draw a card when I land on CHANCE or COMMUNITY CHEST
-- As a user, I want to be able to collect money when I pass GO
+- As a user, I want to be able to collect money when I pass GO ✓
 - As a user, I want to be able to sell properties to other players
 - As a user, I want to be able to buy and sell houses and hotels on properties whose colour-set I own
 - As a user, I want to be able to mortgage and lift mortgages on properties I own
-- As a user, I want to be able to end my turn and pass it to another player
+- As a user, I want to be able to end my turn and pass it to another player ✓
 
