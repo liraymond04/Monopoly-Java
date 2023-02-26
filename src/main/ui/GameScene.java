@@ -19,7 +19,9 @@ public class GameScene implements Scene {
 
     enum GameState {
         SELECT_TURN_OPTION,
-        ROLLING_DICE
+        ROLLING_DICE,
+        ENDING_TURN,
+        PASSING_GO
     }
 
     private GameState gameState;
@@ -101,23 +103,31 @@ public class GameScene implements Scene {
         if (keyStroke != null) {
             System.out.println(keyStroke);
             screen.clear();
-
-            switch (gameState) {
-                case SELECT_TURN_OPTION:
-                    result &= handleSelectTurnOptionArrowInput(keyStroke)
-                            && handleSelectTurnOptionEnterInput(keyStroke);
-                    break;
-                case ROLLING_DICE:
-                    gameState = GameState.SELECT_TURN_OPTION;
-                    alreadyRolled = true;
-                    break;
-            }
+            handleInputState(keyStroke);
             result &= handleDebugInput(keyStroke);
         }
         return result;
     }
 
-    private boolean handleSelectTurnOptionArrowInput(KeyStroke keyStroke) {
+    private void handleInputState(KeyStroke keyStroke) {
+        switch (gameState) {
+            case SELECT_TURN_OPTION:
+                handleSelectTurnOptionArrowInput(keyStroke);
+                handleSelectTurnOptionEnterInput(keyStroke);
+                break;
+            case ROLLING_DICE:
+                rolledDice();
+                break;
+            case ENDING_TURN:
+                endedTurn();
+                break;
+            case PASSING_GO:
+                passedGo();
+                break;
+        }
+    }
+
+    private void handleSelectTurnOptionArrowInput(KeyStroke keyStroke) {
         switch (keyStroke.getKeyType()) {
             case ArrowDown:
                 if (currentTurnOption < maxTurnOption) {
@@ -134,10 +144,9 @@ public class GameScene implements Scene {
                 }
                 break;
         }
-        return true;
     }
 
-    private boolean handleSelectTurnOptionEnterInput(KeyStroke keyStroke) {
+    private void handleSelectTurnOptionEnterInput(KeyStroke keyStroke) {
         switch (keyStroke.getKeyType()) {
             case Enter:
                 switch (currentTurnOption) {
@@ -158,7 +167,6 @@ public class GameScene implements Scene {
                 }
                 break;
         }
-        return true;
     }
 
     private void rollDice() {
@@ -166,18 +174,42 @@ public class GameScene implements Scene {
         if (alreadyRolled) {
             return;
         }
-        rollAmount = new Random().nextInt(12) + 1;
+        rollAmount = new Random().nextInt(11) + 2; // 2-12
+    }
+
+    private void rolledDice() {
+        gameState = GameState.SELECT_TURN_OPTION;
+        if (alreadyRolled) {
+            return;
+        }
         Player player = monopolyGame.getCurrentPlayer();
         if (monopolyGame.movePlayer(player, rollAmount)) {
-            player.addBalance(200);
+            passGo();
         }
+        alreadyRolled = true;
     }
 
     private void endTurn() {
-        monopolyGame.nextPlayer();
+        gameState = GameState.ENDING_TURN;
+    }
+
+    private void endedTurn() {
         gameState = GameState.SELECT_TURN_OPTION;
+        if (!alreadyRolled) {
+            return;
+        }
+        monopolyGame.nextPlayer();
         alreadyRolled = false;
         currentTurnOption = 0;
+    }
+
+    private void passGo() {
+        gameState = GameState.PASSING_GO;
+    }
+
+    private void passedGo() {
+        gameState = GameState.SELECT_TURN_OPTION;
+        monopolyGame.getCurrentPlayer().addBalance(200);
     }
 
     private boolean handleDebugInput(KeyStroke keyStroke) {
@@ -233,14 +265,8 @@ public class GameScene implements Scene {
         textGraphics.putString(9, 0, String.valueOf(monopolyGame.getCurrentRound()));
 
         renderPlayerTurn(textGraphics, 20, 8);
-        switch (gameState) {
-            case SELECT_TURN_OPTION:
-                break;
-            case ROLLING_DICE:
-//                renderPlayerTurn(textGraphics, 20, 8);
-                renderRollingDice(textGraphics, 28, 12);
-                break;
-        }
+
+        renderState(textGraphics);
 
         boardRender(textGraphics, 79, 34, 7, 3, 5, 0,
                 String.valueOf(Symbols.BLOCK_SOLID), null);
@@ -248,17 +274,38 @@ public class GameScene implements Scene {
         return true;
     }
 
+    void renderState(TextGraphics textGraphics) {
+        switch (gameState) {
+            case SELECT_TURN_OPTION:
+                break;
+            case ROLLING_DICE:
+                renderRollingDice(textGraphics, 28, 12);
+                break;
+            case ENDING_TURN:
+                renderEndingTurn(textGraphics, 28, 12);
+                break;
+            case PASSING_GO:
+                renderPassingGo(textGraphics, 28, 12);
+                break;
+        }
+    }
+
     private void renderPlayerTurn(TextGraphics textGraphics, int startX, int startY) {
         Player currentPlayer = monopolyGame.getCurrentPlayer();
         textGraphics.putString(startX, startY, currentPlayer.getName() + "'s turn");
 
         int offsetX = 2;
-        int offsetY = 2;
+        int offsetY = 8;
 
         // TODO
-        //  - require player to roll to end turn
-        //  - add alert window when passing GO
+        //  - add pause menu
 
+        textGraphics.putString(startX, startY + 2, "Current balance: " + currentPlayer.getBalance());
+
+        playerTurnOptions(textGraphics, startX, startY, offsetX, offsetY);
+    }
+
+    private void playerTurnOptions(TextGraphics textGraphics, int startX, int startY, int offsetX, int offsetY) {
         if (alreadyRolled) {
             textGraphics.setForegroundColor(TextColor.ANSI.RED);
         }
@@ -268,7 +315,11 @@ public class GameScene implements Scene {
         textGraphics.putString(startX + offsetX, startY + offsetY + 2, getTurnOption(2) + "Lift mortgage");
         textGraphics.putString(startX + offsetX, startY + offsetY + 3, getTurnOption(3) + "Sell property");
         textGraphics.putString(startX + offsetX, startY + offsetY + 4, getTurnOption(4) + "Sell house");
+        if (!alreadyRolled) {
+            textGraphics.setForegroundColor(TextColor.ANSI.RED);
+        }
         textGraphics.putString(startX + offsetX, startY + offsetY + 5, getTurnOption(5) + "End Turn");
+        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
     }
 
     private void renderRollingDice(TextGraphics textGraphics, int startX, int startY) {
@@ -278,6 +329,24 @@ public class GameScene implements Scene {
         } else {
             textGraphics.putString(startX + 2, startY + 1, "Player has already rolled");
         }
+        textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
+    }
+
+    private void renderEndingTurn(TextGraphics textGraphics, int startX, int startY) {
+        Application.drawBox(textGraphics, startX, startY, 34, 4);
+        if (alreadyRolled) {
+            textGraphics.putString(startX + 2, startY + 1, "It is now "
+                    + monopolyGame.getNextPlayer().getName() + "'s turn");
+        } else {
+            textGraphics.putString(startX + 2, startY + 1, "Please roll before ending turn");
+        }
+        textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
+    }
+
+    private void renderPassingGo(TextGraphics textGraphics, int startX, int startY) {
+        Application.drawBox(textGraphics, startX, startY, 34, 4);
+        textGraphics.putString(startX + 2, startY + 1,
+                monopolyGame.getCurrentPlayer().getName() + " passed GO, collect 200");
         textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 

@@ -134,6 +134,10 @@ public class MonopolyGame {
         return players.get(currentPlayer);
     }
 
+    public Player getNextPlayer() {
+        return players.get((currentPlayer + 1) % players.size());
+    }
+
     public Player nextPlayer() {
         currentPlayer = (currentPlayer + 1) % players.size();
         if (currentPlayer == 0) {
@@ -150,17 +154,6 @@ public class MonopolyGame {
         board.get(newSquare).addPlayer(player);
         player.setCurrentSquare(newSquare);
         return moveAmount > newSquare;
-    }
-
-    public String testLand(int index) {
-        Square square = board.get(index);
-        square.landedOn(null);
-        if (square instanceof PropertySquare) {
-            PropertySquare propertySquare = (PropertySquare) square;
-            propertySquare.addHouse();
-            return String.valueOf(propertySquare.getNumberOfHouses());
-        }
-        return square.getName();
     }
 
     public ArrayList<Square> getBoard() {
