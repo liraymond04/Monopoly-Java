@@ -22,7 +22,7 @@ public class EventSquare extends Square {
         try {
             callOnLand.call();
         } catch (Exception e) {
-            return;
+            System.out.println("No callback provided");
         }
     }
 }

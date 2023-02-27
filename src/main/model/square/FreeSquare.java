@@ -3,8 +3,6 @@ package model.square;
 import model.Player;
 import model.Square;
 
-import java.util.concurrent.Callable;
-
 // Squares that have no special behaviour when landed on
 public class FreeSquare extends Square {
 
@@ -16,7 +14,7 @@ public class FreeSquare extends Square {
     // EFFECTS: runs when player lands on the square
     @Override
     public void landedOn(Player player) {
-
+        System.out.println(player.getName() + " landed on " + getName());
     }
 
 }

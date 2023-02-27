@@ -39,7 +39,7 @@ public class PropertySquare extends Square {
     // MODIFIES: this, player
     // EFFECTS: removes balance from landed player to owner of property
     public void payRent(Player player) {
-
+        System.out.println(player.getName() + " pays " + rent.get(numberOfHouses) + " to " + ownedBy.getName());
     }
 
     public PropertyType getType() {
@@ -50,10 +50,18 @@ public class PropertySquare extends Square {
         return numberOfHouses;
     }
 
+    public Player getOwnedBy() {
+        return ownedBy;
+    }
+
+    public void setOwnedBy(Player player) {
+        ownedBy = player;
+    }
+
     // MODIFIES: this
-    // EFFECTS: adds houses while number of houses is less than 5
+    // EFFECTS: adds houses while number of houses is less than 4
     public int addHouse() {
-        if (numberOfHouses < 5) {
+        if (numberOfHouses < 4) {
             numberOfHouses++;
         }
         return numberOfHouses;
@@ -63,13 +71,17 @@ public class PropertySquare extends Square {
     // EFFECTS: removes houses while number of houses is greater than zero
     public int removeHouse() {
         if (numberOfHouses > 0) {
-            numberOfHouses++;
+            numberOfHouses--;
         }
         return numberOfHouses;
     }
 
     public boolean isMortgaged() {
         return mortgaged;
+    }
+
+    public void setMortgaged(boolean mortgaged) {
+        this.mortgaged = mortgaged;
     }
 
 }
