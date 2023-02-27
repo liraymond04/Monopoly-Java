@@ -244,14 +244,17 @@ public class GameScene implements Scene {
 //                    System.out.println(monopolyGame.testLand(3));
                 break;
             case Character:
-                if (keyStroke.getCharacter() == 'f') {
+                if (keyStroke.getCharacter() == 'f') { // print current player
                     System.out.println(monopolyGame.getCurrentPlayer().getName());
                 }
-                if (keyStroke.getCharacter() == 'g') {
+                if (keyStroke.getCharacter() == 'g') { // move next player
                     System.out.println(monopolyGame.nextPlayer().getName());
                 }
-                if (keyStroke.getCharacter() == 't') {
+                if (keyStroke.getCharacter() == 'h') { // print balance
                     System.out.println(monopolyGame.getCurrentPlayer().getBalance());
+                }
+                if (keyStroke.getCharacter() == 'j') {  // move just before GO
+                    monopolyGame.movePlayer(monopolyGame.getCurrentPlayer(), 38);
                 }
                 break;
             case Escape:
