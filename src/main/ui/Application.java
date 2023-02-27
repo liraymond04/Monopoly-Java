@@ -9,6 +9,7 @@ import model.Player;
 
 import java.util.ArrayList;
 
+// handles application window logic
 public class Application {
     private Screen screen;
     private Scene scene;
@@ -16,6 +17,7 @@ public class Application {
     private MainMenu mainMenu;
     private GameScene gameScene;
 
+    // EFFECTS: constructor initializes screen dimensions
     Application(int screenWidth, int screenHeight) throws Exception {
         TerminalSize terminalSize = new TerminalSize(screenWidth, screenHeight);
         screen = new DefaultTerminalFactory().setInitialTerminalSize(terminalSize).createScreen();
@@ -27,6 +29,8 @@ public class Application {
         setMainMenu();
     }
 
+    // MODIFIES: textGraphics
+    // EFFECTS: draws box with ANSI characters
     public static void drawBox(TextGraphics textGraphics, int x, int y, int width, int height) {
         textGraphics.putString(x, y, "╭");
         textGraphics.putString(x + width, y, "╮");
@@ -47,6 +51,8 @@ public class Application {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: handles main game loop, and executes scene functions
     public void start() throws Exception {
         boolean run = true;
         while (run) {
@@ -67,18 +73,28 @@ public class Application {
         this.scene = scene;
     }
 
+    // MODIFIES: this
+    // EFFECTS: creates new instance of main menu
     public void createMainMenu() {
         mainMenu = new MainMenu(this);
     }
 
+    // REQUIRES: mainMenu != null
+    // MODIFIES: this
+    // EFFECTS: sets active scene to the main menu
     public void setMainMenu() {
         setScene(mainMenu);
     }
 
-    public void createGameScene(int numberOfPlayers, ArrayList<Player> players) {
-        gameScene = new GameScene(this, numberOfPlayers, players);
+    // MODIFIES: this
+    // EFFECTS: creates new instance of game with provided list of players
+    public void createGameScene(ArrayList<Player> players) {
+        gameScene = new GameScene(this, players);
     }
 
+    // REQUIRES: gameScene != null
+    // MODIFIES: this
+    // EFFECTS: sets active scene to game scene
     public void setGameScene() {
         setScene(gameScene);
     }

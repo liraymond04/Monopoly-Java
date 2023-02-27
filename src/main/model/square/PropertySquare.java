@@ -5,6 +5,7 @@ import model.Square;
 
 import java.util.ArrayList;
 
+// Squares that are designated as properties
 public class PropertySquare extends Square {
 
     private PropertyType type;
@@ -18,6 +19,7 @@ public class PropertySquare extends Square {
     private int numberOfHouses = 0;
     private boolean mortgaged = false;
 
+    // EFFECTS: constructor initializes name, property type, price, house prices, and rent amounts
     public PropertySquare(String name, PropertyType type, int price, int house, ArrayList<Integer> rent) {
         setName(name);
         this.type = type;
@@ -26,11 +28,16 @@ public class PropertySquare extends Square {
         this.rent = rent;
     }
 
+    // MODIFIES: this, player
+    // EFFECTS: buy or auction if not owned, otherwise pay rent
     @Override
     public void landedOn(Player player) {
         payRent(player);
     }
 
+    // REQUIRES: ownedBy != null
+    // MODIFIES: this, player
+    // EFFECTS: removes balance from landed player to owner of property
     public void payRent(Player player) {
 
     }
@@ -43,6 +50,8 @@ public class PropertySquare extends Square {
         return numberOfHouses;
     }
 
+    // MODIFIES: this
+    // EFFECTS: adds houses while number of houses is less than 5
     public int addHouse() {
         if (numberOfHouses < 5) {
             numberOfHouses++;
@@ -50,6 +59,8 @@ public class PropertySquare extends Square {
         return numberOfHouses;
     }
 
+    // MODIFIES: this
+    // EFFECTS: removes houses while number of houses is greater than zero
     public int removeHouse() {
         if (numberOfHouses > 0) {
             numberOfHouses++;

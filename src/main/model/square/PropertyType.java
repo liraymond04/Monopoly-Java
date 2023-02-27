@@ -2,6 +2,7 @@ package model.square;
 
 import com.googlecode.lanterna.TextColor;
 
+// describes different property types
 public enum PropertyType {
     BROWN,
     LIGHT_BLUE,
@@ -14,6 +15,7 @@ public enum PropertyType {
     RAILROAD,
     UTILITY;
 
+    // EFFECTS: return RGB values of current property type
     public TextColor toColor() {
         switch (this) {
             case BROWN:

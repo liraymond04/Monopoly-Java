@@ -8,6 +8,7 @@ import model.square.PropertyType;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+// handles main game logic
 public class MonopolyGame {
 
     private int currentRound = 1;
@@ -17,6 +18,8 @@ public class MonopolyGame {
 
     private ArrayList<Square> board;
 
+    // MODIFIES: this, players
+    // EFFECTS: constructor initializes board data and sets player positions
     public MonopolyGame(ArrayList<Player> players) {
         this.players = players;
 
@@ -29,10 +32,11 @@ public class MonopolyGame {
         }
     }
 
+    // EFFECTS: defines board details
     @SuppressWarnings("methodlength")
     private ArrayList<Square> initBoard() {
         return new ArrayList<>(Arrays.asList(
-                new FreeSquare("Go", null),
+                new FreeSquare("Go"),
                 new PropertySquare("Mediterranean Avenue", PropertyType.BROWN, 60, 50,
                         new ArrayList<>(Arrays.asList(2, 10, 30, 90, 160, 250))),
                 new EventSquare("Community Chest", () -> {
@@ -57,7 +61,7 @@ public class MonopolyGame {
                         new ArrayList<>(Arrays.asList(6, 30, 90, 270, 400, 550))),
                 new PropertySquare("Connecticut Avenue", PropertyType.LIGHT_BLUE, 120, 50,
                         new ArrayList<>(Arrays.asList(8, 40, 100, 300, 450, 600))),
-                new FreeSquare("Jail", null),
+                new FreeSquare("Jail"),
                 new PropertySquare("St. Charles Place", PropertyType.PINK, 140, 100,
                         new ArrayList<>(Arrays.asList(10, 50, 150, 450, 625, 750))),
                 new PropertySquare("Electric Company", PropertyType.UTILITY, 150, -1, null),
@@ -77,7 +81,7 @@ public class MonopolyGame {
                         new ArrayList<>(Arrays.asList(14, 70, 200, 550, 750, 950))),
                 new PropertySquare("New York Avenue", PropertyType.ORANGE, 200, 100,
                         new ArrayList<>(Arrays.asList(16, 80, 220, 600, 800, 1000))),
-                new FreeSquare("Free Parking", null),
+                new FreeSquare("Free Parking"),
                 new PropertySquare("Kentucky Avenue", PropertyType.RED, 220, 150,
                         new ArrayList<>(Arrays.asList(18, 90, 250, 700, 875, 1050))),
                 new EventSquare("Chance", () -> {
@@ -95,7 +99,7 @@ public class MonopolyGame {
                 new PropertySquare("Ventnor Avenue", PropertyType.YELLOW, 260, 150,
                         new ArrayList<>(Arrays.asList(22, 110, 330, 800, 975, 1150))),
                 new PropertySquare("Water Works", PropertyType.UTILITY, 150, -1, null),
-                new FreeSquare("Go to Jail", () -> {
+                new EventSquare("Go to Jail", () -> {
                     System.out.println("Go to Jail");
                     return null;
                 }),
@@ -130,14 +134,18 @@ public class MonopolyGame {
         return currentRound;
     }
 
+    // EFFECTS: return the current player
     public Player getCurrentPlayer() {
         return players.get(currentPlayer);
     }
 
+    // EFFECTS: return the next player in the cycle
     public Player getNextPlayer() {
         return players.get((currentPlayer + 1) % players.size());
     }
 
+    // MODIFIES: this
+    // EFFECTS: move current player to the next player in the cycle
     public Player nextPlayer() {
         currentPlayer = (currentPlayer + 1) % players.size();
         if (currentPlayer == 0) {
@@ -146,6 +154,8 @@ public class MonopolyGame {
         return getCurrentPlayer();
     }
 
+    // MODIFIES: this, player
+    // EFFECTS: move player given number of spaces, and return whether they pass GO
     public boolean movePlayer(Player player, int move) {
         int currentSquare = player.getCurrentSquare();
         board.get(currentSquare).removePlayer(player);

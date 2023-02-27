@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+// scene that displays the main game
 public class GameScene implements Scene {
 
     enum GameState {
@@ -40,7 +41,8 @@ public class GameScene implements Scene {
 
     ArrayList<String> boardRender;
 
-    GameScene(Application application, int numberOfPlayers, ArrayList<Player> players) {
+    // EFFECTS: constructor initializes screen object, monopoly game object, game state, and strings for rendering
+    GameScene(Application application, ArrayList<Player> players) {
         gameState = GameState.SELECT_TURN_OPTION;
 
         this.application = application;
@@ -52,6 +54,7 @@ public class GameScene implements Scene {
         boardRender = initBoard();
     }
 
+    // EFFECTS: array of strings for rendering the monopoly board to the screen
     @SuppressWarnings("methodlength")
     private ArrayList<String> initBoard() {
         return new ArrayList<>(Arrays.asList(
@@ -96,6 +99,8 @@ public class GameScene implements Scene {
                 "               AVE    AVE            AVE   RAIL          AVE   CHEST   AVE                \n"));
     }
 
+    // MODIFIES: this
+    // EFFECTS: handles main input logic
     @Override
     public boolean handleInput() throws IOException {
         boolean result = true;
@@ -109,6 +114,7 @@ public class GameScene implements Scene {
         return result;
     }
 
+    // EFFECTS: input behaviour for different game states
     private void handleInputState(KeyStroke keyStroke) {
         switch (gameState) {
             case SELECT_TURN_OPTION:
@@ -127,6 +133,9 @@ public class GameScene implements Scene {
         }
     }
 
+    // REQUIRES: keyStroke != null
+    // MODIFIES: this
+    // EFFECTS: changes selected turn option with arrow keys
     private void handleSelectTurnOptionArrowInput(KeyStroke keyStroke) {
         switch (keyStroke.getKeyType()) {
             case ArrowDown:
@@ -146,6 +155,9 @@ public class GameScene implements Scene {
         }
     }
 
+    // REQUIRES: keyStroke != null
+    // MODIFIES: this
+    // EFFECTS: behaviour for selected turn option when enter is pressed
     private void handleSelectTurnOptionEnterInput(KeyStroke keyStroke) {
         switch (keyStroke.getKeyType()) {
             case Enter:
@@ -169,6 +181,8 @@ public class GameScene implements Scene {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: set game state to rolling dice, set new value for rolled dice if not already rolled
     private void rollDice() {
         gameState = GameState.ROLLING_DICE;
         if (alreadyRolled) {
@@ -177,6 +191,8 @@ public class GameScene implements Scene {
         rollAmount = new Random().nextInt(11) + 2; // 2-12
     }
 
+    // MODIFIES: this
+    // EFFECTS: revert game state, and moves player with value from rolled dice
     private void rolledDice() {
         gameState = GameState.SELECT_TURN_OPTION;
         if (alreadyRolled) {
@@ -189,10 +205,14 @@ public class GameScene implements Scene {
         alreadyRolled = true;
     }
 
+    // MODIFIES: this
+    // EFFECTS: set state to ending turn
     private void endTurn() {
         gameState = GameState.ENDING_TURN;
     }
 
+    // MODIFIES: this
+    // EFFECTS: revert game state, and pass turn to next player
     private void endedTurn() {
         gameState = GameState.SELECT_TURN_OPTION;
         if (!alreadyRolled) {
@@ -203,15 +223,21 @@ public class GameScene implements Scene {
         currentTurnOption = 0;
     }
 
+    // MODIFIES: this
+    // EFFECTS: set state to passing go
     private void passGo() {
         gameState = GameState.PASSING_GO;
     }
 
+    // MODIFIES: this
+    // EFFECTS: revert game state, and give reward balance after passing GO
     private void passedGo() {
         gameState = GameState.SELECT_TURN_OPTION;
         monopolyGame.getCurrentPlayer().addBalance(200);
     }
 
+    // REQUIRES: keyStroke != null
+    // EFFECTS: inputs for debug functions
     private boolean handleDebugInput(KeyStroke keyStroke) {
         switch (keyStroke.getKeyType()) {
             case Enter:
@@ -236,18 +262,14 @@ public class GameScene implements Scene {
         return true;
     }
 
+    // EFFECTS: handles changes to models
     @Override
     public boolean update() {
-        switch (gameState) {
-            case SELECT_TURN_OPTION:
-                break;
-            case ROLLING_DICE:
-                break;
-        }
 
         return true;
     }
 
+    // EFFECTS: handles drawing to the screen
     @Override
     public boolean render() {
         TextGraphics textGraphics = screen.newTextGraphics();
@@ -274,6 +296,8 @@ public class GameScene implements Scene {
         return true;
     }
 
+    // REQUIRES: textGraphics != null
+    // EFFECTS: draw game state specific items
     void renderState(TextGraphics textGraphics) {
         switch (gameState) {
             case SELECT_TURN_OPTION:
@@ -290,6 +314,8 @@ public class GameScene implements Scene {
         }
     }
 
+    // REQUIRES: textGraphics != null
+    // EFFECTS: draw player turn information
     private void renderPlayerTurn(TextGraphics textGraphics, int startX, int startY) {
         Player currentPlayer = monopolyGame.getCurrentPlayer();
         textGraphics.putString(startX, startY, currentPlayer.getName() + "'s turn");
@@ -305,6 +331,8 @@ public class GameScene implements Scene {
         playerTurnOptions(textGraphics, startX, startY, offsetX, offsetY);
     }
 
+    // REQUIRES: textGraphics != null
+    // EFFECTS: draw turn options
     private void playerTurnOptions(TextGraphics textGraphics, int startX, int startY, int offsetX, int offsetY) {
         if (alreadyRolled) {
             textGraphics.setForegroundColor(TextColor.ANSI.RED);
@@ -322,6 +350,8 @@ public class GameScene implements Scene {
         textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
     }
 
+    // REQUIRES: textGraphics != null
+    // EFFECTS: draw rolling dice alert window
     private void renderRollingDice(TextGraphics textGraphics, int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 4);
         if (!alreadyRolled) {
@@ -332,6 +362,8 @@ public class GameScene implements Scene {
         textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
+    // REQUIRES: textGraphics != null
+    // EFFECTS: draw ending turn alert window
     private void renderEndingTurn(TextGraphics textGraphics, int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 4);
         if (alreadyRolled) {
@@ -343,6 +375,8 @@ public class GameScene implements Scene {
         textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
+    // REQUIRES: textGraphics != null
+    // EFFECTS: draw passing go alert window
     private void renderPassingGo(TextGraphics textGraphics, int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 4);
         textGraphics.putString(startX + 2, startY + 1,
@@ -350,10 +384,13 @@ public class GameScene implements Scene {
         textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
+    // EFFECTS: selection indicator for turn options
     private String getTurnOption(int turnOption) {
         return (currentTurnOption == turnOption) ? "> " : "  ";
     }
 
+    // REQUIRES: boardRender != null && board != null
+    // EFFECTS: draw board from board model
     private void boardRender(TextGraphics textGraphics,
                              int startX, int startY, int horizontalSize, int verticalSize,
                              int horizontalOffset, int verticalOffset,
@@ -369,6 +406,8 @@ public class GameScene implements Scene {
                 0, verticalSize, horizontalOffset, verticalOffset, length * 3, s, color);
     }
 
+    // REQUIRES: boardRender != null && board != null
+    // EFFECTS: draw rows from board model
     private void boardRenderRows(TextGraphics textGraphics,
                                  int startX, int startY, int length,
                                  int horizontalMove, int verticalMove,
@@ -394,6 +433,8 @@ public class GameScene implements Scene {
         }
     }
 
+    // REQUIRES: boardRender != null && board != null
+    // EFFECTS: draw individual square details
     private void squareRender(TextGraphics textGraphics,
                               Square square, boolean isProperty,
                               int startX, int startY,

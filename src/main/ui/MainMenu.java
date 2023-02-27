@@ -1,6 +1,5 @@
 package ui;
 
-import com.googlecode.lanterna.Symbols;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
@@ -28,6 +27,7 @@ public class MainMenu implements Scene {
     private int currentOption = 0;
     private int maxOption = 2;
 
+    // EFFECTS: constructor initializes screen object, number of players, and ASCII banner
     MainMenu(Application application) {
         this.application = application;
         screen = application.getScreen();
@@ -44,6 +44,8 @@ public class MainMenu implements Scene {
         numberOfPlayers = minPlayers;
     }
 
+    // MODIFIES: this
+    // EFFECTS: handles main input logic
     @Override
     public boolean handleInput() throws IOException {
         KeyStroke keyStroke = screen.pollInput();
@@ -54,7 +56,7 @@ public class MainMenu implements Scene {
             KeyType keyType = keyStroke.getKeyType();
 
             handleArrowInput(keyType);
-            if (!handleEnterInput(keyType))  {
+            if (!handleEnterInput(keyType)) {
                 return false;
             }
 
@@ -68,6 +70,8 @@ public class MainMenu implements Scene {
         return true;
     }
 
+    // MODIFIES: this
+    // EFFECTS: change number of players with horizontal arrows, and options with vertical arrows
     private void handleArrowInput(KeyType keyType) {
         switch (keyType) {
             case ArrowRight:
@@ -93,6 +97,8 @@ public class MainMenu implements Scene {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: behaviour for selected option when enter is pressed
     private boolean handleEnterInput(KeyType keyType) {
         switch (keyType) {
             case Enter:
@@ -103,7 +109,7 @@ public class MainMenu implements Scene {
                         if (players == null) {
                             break;
                         }
-                        application.createGameScene(numberOfPlayers, players);
+                        application.createGameScene(players);
                         application.setGameScene();
                         break;
                     case 2: // quit
@@ -116,6 +122,7 @@ public class MainMenu implements Scene {
         return true;
     }
 
+    // EFFECTS: return list of new players
     private ArrayList<Player> initPlayers() {
         ArrayList<Player> result = new ArrayList<>();
         TextGraphics textGraphics = screen.newTextGraphics();
@@ -131,6 +138,9 @@ public class MainMenu implements Scene {
         return result;
     }
 
+    // REQUIRES: textGraphics != null
+    // MODIFIES: this
+    // EFFECTS: create individual player object with input box
     private Player createNewPlayer(TextGraphics textGraphics, int x, int y,
                                    int width, int height, int i) throws Exception {
         String name = "";
@@ -155,6 +165,8 @@ public class MainMenu implements Scene {
         }
     }
 
+    // REQUIRES: keyStroke != null
+    // EFFECTS: update name string with keystroke
     private String updateName(KeyStroke keyStroke, String name) {
         String result = name;
         switch (keyStroke.getKeyType()) {
@@ -170,18 +182,21 @@ public class MainMenu implements Scene {
         return result;
     }
 
+    // EFFECTS: remove last character from string
     private String removeLastChar(String s) {
         return (s == null || s.length() == 0)
                 ? ""
                 : (s.substring(0, s.length() - 1));
     }
 
+    // EFFECTS: handles drawing to the screen
     @Override
     public boolean update() {
 
         return true;
     }
 
+    // EFFECTS: handles drawing to the screen
     @Override
     public boolean render() {
         TextGraphics textGraphics = screen.newTextGraphics();
@@ -208,7 +223,9 @@ public class MainMenu implements Scene {
         return true;
     }
 
+    // EFFECTS: selection indicator for turn options
     private String selected(int option) {
         return currentOption == option ? "> " : "  ";
     }
+
 }

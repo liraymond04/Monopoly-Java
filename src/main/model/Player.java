@@ -4,6 +4,7 @@ import model.square.PropertySquare;
 
 import java.util.ArrayList;
 
+// defines data specific to individual players
 public class Player {
 
     enum Color {
@@ -22,6 +23,7 @@ public class Player {
     private int balance;
     private ArrayList<PropertySquare> properties;
 
+    // EFFECTS: constructor initializes position in play order, name, color, current square position, and balance
     public Player(int index, String name, Color color, int currentSquare, int balance) {
         this.index = index;
         this.name = name;
@@ -50,11 +52,15 @@ public class Player {
         return balance;
     }
 
+    // MODIFIES: this
+    // EFFECTS: adds given value to balance, and returns new balance
     public int addBalance(int balance) {
         this.balance += balance;
         return this.balance;
     }
 
+    // MODIFIES: this
+    // EFFECTS: removes given value to balance, and returns new balance
     public int removeBalance(int balance) {
         this.balance -= balance;
         return this.balance;

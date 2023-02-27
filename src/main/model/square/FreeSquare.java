@@ -5,22 +5,18 @@ import model.Square;
 
 import java.util.concurrent.Callable;
 
+// Squares that have no special behaviour when landed on
 public class FreeSquare extends Square {
 
-    Callable<Void> callOnLand;
-
-    public FreeSquare(String name, Callable<Void> callable) {
+    // EFFECTS: constructor initializes the name of the square
+    public FreeSquare(String name) {
         setName(name);
-        callOnLand = callable;
     }
 
+    // EFFECTS: runs when player lands on the square
     @Override
     public void landedOn(Player player) {
-        try {
-            callOnLand.call();
-        } catch (Exception e) {
-            return;
-        }
+
     }
 
 }
