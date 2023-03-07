@@ -43,4 +43,7 @@ limits as a programmer.
 - As a user, I want to be able to buy and sell houses and hotels on properties whose colour-set I own
 - As a user, I want to be able to mortgage and lift mortgages on properties I own
 - As a user, I want to be able to end my turn and pass it to another player ✓
+- As a user, I want to be able to save my game from the pause menu ✓
+- As a user, I want to be able to be warned to quit without saving, when quitting from the pause menu ✓
+- As a user, I want to be able to choose a game to load from the main menu ✓
 

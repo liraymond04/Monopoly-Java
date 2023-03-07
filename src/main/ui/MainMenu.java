@@ -7,9 +7,14 @@ import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import model.Player;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class MainMenu implements Scene {
 
@@ -103,14 +108,11 @@ public class MainMenu implements Scene {
         switch (keyType) {
             case Enter:
                 switch (currentOption) {
-                    case 1: // play
-                        System.out.println("Play with " + numberOfPlayers + " players");
-                        ArrayList<Player> players = initPlayers();
-                        if (players == null) {
-                            break;
-                        }
-                        application.createGameScene(players);
-                        application.setGameScene();
+                    case 0: // new game
+                        newGame();
+                        break;
+                    case 1: // load game
+                        loadGame();
                         break;
                     case 2: // quit
                         return false;
@@ -120,6 +122,29 @@ public class MainMenu implements Scene {
                 break;
         }
         return true;
+    }
+
+    // EFFECTS: handles making a new game
+    private void newGame() {
+        System.out.println("Play with " + numberOfPlayers + " players");
+        ArrayList<Player> players = initPlayers();
+        if (players == null) {
+            return;
+        }
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd, HH:mm").format(new java.util.Date());
+        application.createGameScene(players, timeStamp + ".json");
+        application.setGameScene();
+    }
+
+    private void loadGame() {
+        try {
+            application.createGameScene(null, chooseSave());
+        } catch (Exception e) {
+            System.out.println("Failed to load save");
+            screen.clear();
+            return;
+        }
+        application.setGameScene();
     }
 
     // EFFECTS: return list of new players
@@ -151,7 +176,7 @@ public class MainMenu implements Scene {
             if (keyStroke != null) {
                 switch (keyStroke.getKeyType()) {
                     case Enter:
-                        return new Player(i, name, null, 0, 200);
+                        return new Player(i, name, 0, 200);
                     case Escape:
                         throw new Exception();
                     default:
@@ -189,6 +214,66 @@ public class MainMenu implements Scene {
                 : (s.substring(0, s.length() - 1));
     }
 
+    // EFFECTS: return name of save to load
+    private String chooseSave() throws Exception {
+        // TODO - scrolling for more files
+        TextGraphics textGraphics = screen.newTextGraphics();
+        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
+        ArrayList<String> saves = getSaves();
+        int currentSaveOption = 0;
+        while (true) {
+            KeyStroke keyStroke = screen.pollInput();
+            render();
+            if (keyStroke != null) {
+                switch (keyStroke.getKeyType()) {
+                    case Enter:
+                        return saves.get(currentSaveOption);
+                    case Escape:
+                        throw new Exception();
+                    case ArrowUp:
+                        currentSaveOption--;
+                        break;
+                    case ArrowDown:
+                        currentSaveOption++;
+                        break;
+                }
+            }
+            chooseSaveRender(textGraphics, saves, currentSaveOption);
+        }
+    }
+
+    // REQUIRES: textGraphics != null
+    // EFFECTS: renders choose save window
+    private void chooseSaveRender(TextGraphics textGraphics, ArrayList<String> saves, int option) throws IOException {
+        if (option < 0) {
+            option = saves.size() - 1;
+        } else if (option >= saves.size()) {
+            option = 0;
+        }
+        Application.drawBox(textGraphics, 20, 11, 50, 14);
+        textGraphics.putString(22, 11, "Choose save");
+        drawSaves(textGraphics, 23, 12, saves, option);
+        screen.refresh();
+    }
+
+    // EFFECTS: get filenames in saves folder
+    private ArrayList<String> getSaves() {
+        ArrayList<String> saves = new ArrayList<>();
+        File folder = new File(Application.getSaves());
+        for (File file : Objects.requireNonNull(folder.listFiles((dir, name) -> name.endsWith(".json")))) {
+            saves.add(file.getName());
+        }
+        return saves;
+    }
+
+    // REQUIRES: textGraphics != null
+    // EFFECTS: draws list of saves
+    private void drawSaves(TextGraphics textGraphics, int startX, int startY, ArrayList<String> saves, int option) {
+        for (int i = 0; i < saves.size(); i++) {
+            textGraphics.putString(startX, startY + i, (option == i ? "> " : "  ") + saves.get(i));
+        }
+    }
+
     // EFFECTS: handles drawing to the screen
     @Override
     public boolean update() {
@@ -212,10 +297,10 @@ public class MainMenu implements Scene {
                 + " " + numberOfPlayers + " "
                 + (numberOfPlayers < maxPlayers ? ">" : " ");
         textGraphics.putString(x, y + banner.size() + 2,  selected(0)
-                + "Number of Players (2-8):  " + playerString);
+                + "New game with number of players (2-8):  " + playerString);
 
         textGraphics.putString(x, y + banner.size() + 4,  selected(1)
-                + "Play");
+                + "Load game from file");
 
         textGraphics.putString(x, y + banner.size() + 6,  selected(2)
                 + "Quit");

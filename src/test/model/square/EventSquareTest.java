@@ -46,8 +46,8 @@ public class EventSquareTest {
     @Test
     public void testSquarePlayers() {
         Set<Player> players = new HashSet<>();
-        Player play1 = new Player(0, "play1", null, 0, 200);
-        Player play2 = new Player(1, "play2", null, 0, 200);
+        Player play1 = new Player(0, "play1", 0, 200);
+        Player play2 = new Player(1, "play2", 0, 200);
         players.add(play1);
         players.add(play2);
 
@@ -63,7 +63,7 @@ public class EventSquareTest {
 
     @Test
     public void testLanding() {
-        Player play1 = new Player(0, "play1", null, 0, 200);
+        Player play1 = new Player(0, "play1", 0, 200);
         square.landedOn(play1);
         squareNoCallback.landedOn(play1);
 

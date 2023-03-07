@@ -5,17 +5,25 @@ import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import model.MonopolyGame;
 import model.Player;
+import persistence.JsonReader;
+import persistence.JsonWriter;
 
 import java.util.ArrayList;
 
 // handles application window logic
 public class Application {
+    private static final String SAVES = "./data/saves/";
+
     private Screen screen;
     private Scene scene;
 
     private MainMenu mainMenu;
     private GameScene gameScene;
+
+    private JsonWriter jsonWriter;
+    private JsonReader jsonReader;
 
     // EFFECTS: constructor initializes screen dimensions
     Application(int screenWidth, int screenHeight) throws Exception {
@@ -27,6 +35,10 @@ public class Application {
 
         createMainMenu();
         setMainMenu();
+    }
+
+    public static String getSaves() {
+        return SAVES;
     }
 
     // MODIFIES: textGraphics
@@ -88,8 +100,8 @@ public class Application {
 
     // MODIFIES: this
     // EFFECTS: creates new instance of game with provided list of players
-    public void createGameScene(ArrayList<Player> players) {
-        gameScene = new GameScene(this, players);
+    public void createGameScene(ArrayList<Player> players, String saveName) {
+        gameScene = new GameScene(this, players, saveName);
     }
 
     // REQUIRES: gameScene != null
@@ -97,5 +109,31 @@ public class Application {
     // EFFECTS: sets active scene to game scene
     public void setGameScene() {
         setScene(gameScene);
+    }
+
+    // EFFECTS: make new json writer for file
+    public void setJsonWriter(String fileName) {
+        jsonWriter = new JsonWriter(SAVES + fileName);
+    }
+
+    // EFFECTS: make new json reader for file
+    public void setJsonReader(String fileName) {
+        jsonReader = new JsonReader(SAVES + fileName);
+    }
+
+    public JsonReader getJsonReader() {
+        return jsonReader;
+    }
+
+    // REQUIRES: jsonWriter != null
+    // EFFECTS: saves monopoly game data to json
+    public void saveMonopolyGame(MonopolyGame monopolyGame) {
+        try {
+            jsonWriter.open();
+            jsonWriter.write(monopolyGame);
+            jsonWriter.close();
+        } catch (Exception e) {
+            System.out.println("Failed to open file");
+        }
     }
 }

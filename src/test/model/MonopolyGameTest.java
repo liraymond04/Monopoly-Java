@@ -1,5 +1,8 @@
 package model;
 
+import model.square.PropertySquare;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,8 +27,8 @@ class MonopolyGameTest {
     public void before() {
         System.setOut(new PrintStream(outContent));
         players = new ArrayList<>(Arrays.asList(
-                new Player(0, "player1", null, 0, 200),
-                new Player(1, "player2", null, 0, 200)
+                new Player(0, "player1", 0, 200),
+                new Player(1, "player2", 0, 200)
         ));
         monopolyGame = new MonopolyGame(players);
     }
@@ -54,7 +57,7 @@ class MonopolyGameTest {
         monopolyGame.movePlayer(player, 2);
         assertEquals(board.get(player.getCurrentSquare()), board.get(2));
         assertFalse(monopolyGame.movePlayer(player, 2)); // pos 4
-        assertTrue(monopolyGame.movePlayer(player, 39)); // move whole board, GO
+        assertTrue(monopolyGame.movePlayer(player, 40)); // move whole board, GO
         assertEquals(board.get(player.getCurrentSquare()), board.get(4)); // comes back around
     }
 
@@ -68,10 +71,10 @@ class MonopolyGameTest {
         board.get(7).landedOn(player);
         board.get(17).landedOn(player);
         board.get(22).landedOn(player);
-        board.get(29).landedOn(player);
-        board.get(32).landedOn(player);
-        board.get(35).landedOn(player);
-        board.get(37).landedOn(player);
+        board.get(30).landedOn(player);
+        board.get(33).landedOn(player);
+        board.get(36).landedOn(player);
+        board.get(38).landedOn(player);
 
         String[] outs = outContent.toString().split("\n");
         String[] checks = {
@@ -84,5 +87,42 @@ class MonopolyGameTest {
             assertEquals(checks[i], outs[i]);
         }
     }
+
+    @Test
+    public void testToJson() {
+        monopolyGame.setCurrentPlayer(1);
+        monopolyGame.setCurrentRound(5);
+        monopolyGame.setAlreadyRolled(true);
+        PropertySquare propertySquare = (PropertySquare) monopolyGame.getBoard().get(5);
+        monopolyGame.setPlayers(new ArrayList<>(Arrays.asList(
+                new Player(0, "player1", 0, 200),
+                new Player(1, "player2", 0, 200)
+        )));
+        propertySquare.setOwnedBy(monopolyGame.getPlayers().get(0));
+
+        JSONObject json = new JSONObject();
+        JSONArray playerJson = new JSONArray();
+        for (Player player : monopolyGame.getPlayers()) {
+            playerJson.put(player.toJson());
+        }
+        JSONArray boardJson = new JSONArray();
+        for (int i = 0; i < monopolyGame.getBoard().size(); i++) {
+            Square square = monopolyGame.getBoard().get(i);
+            if (!(square instanceof PropertySquare)) {
+                continue;
+            }
+            JSONObject property = ((PropertySquare) square).toJson();
+            property.put("index", i);
+            boardJson.put(property);
+        }
+        json.put("current_round", monopolyGame.getCurrentRound());
+        json.put("current_player", monopolyGame.getCurrentPlayer().getIndex());
+        json.put("already_rolled", monopolyGame.isAlreadyRolled());
+        json.put("players", playerJson);
+        json.put("board", boardJson);
+
+        assertEquals(monopolyGame.toJson().toString(), json.toString());
+    }
+
 
 }

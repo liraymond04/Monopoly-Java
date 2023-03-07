@@ -2,11 +2,13 @@ package model.square;
 
 import model.Player;
 import model.Square;
+import org.json.JSONObject;
+import persistence.Writeable;
 
 import java.util.ArrayList;
 
 // Squares that are designated as properties
-public class PropertySquare extends Square {
+public class PropertySquare extends Square implements Writeable {
 
     private PropertyType type;
 
@@ -82,6 +84,15 @@ public class PropertySquare extends Square {
 
     public void setMortgaged(boolean mortgaged) {
         this.mortgaged = mortgaged;
+    }
+
+    @Override
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("owned_by", ownedBy == null ? -1 : ownedBy.getIndex());
+        json.put("number_of_houses", numberOfHouses);
+        json.put("mortgaged", mortgaged);
+        return json;
     }
 
 }

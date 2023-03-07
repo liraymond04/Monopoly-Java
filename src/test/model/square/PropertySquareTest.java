@@ -2,6 +2,7 @@ package model.square;
 
 import com.googlecode.lanterna.TextColor;
 import model.Player;
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,8 +90,8 @@ public class PropertySquareTest {
     @Test
     public void testSquarePlayers() {
         Set<Player> players = new HashSet<>();
-        Player play1 = new Player(0, "play1", null, 0, 200);
-        Player play2 = new Player(1, "play2", null, 0, 200);
+        Player play1 = new Player(0, "play1", 0, 200);
+        Player play2 = new Player(1, "play2", 0, 200);
         players.add(play1);
         players.add(play2);
         square.setOwnedBy(play2);
@@ -108,8 +109,8 @@ public class PropertySquareTest {
 
     @Test
     public void testLanding() {
-        Player play1 = new Player(0, "play1", null, 0, 200);
-        Player play2 = new Player(1, "play2", null, 0, 200);
+        Player play1 = new Player(0, "play1", 0, 200);
+        Player play2 = new Player(1, "play2", 0, 200);
         square.setOwnedBy(play1);
         square.landedOn(play2);
         assertEquals(0, square.getNumberOfHouses());
@@ -148,6 +149,21 @@ public class PropertySquareTest {
         for (int i = 0; i < checks.length; i++) {
             assertEquals(checks[i], outs[i]);
         }
+    }
+
+    @Test
+    public void testToJson() {
+        JSONObject json = new JSONObject();
+        int ownedBy;
+        if (square.getOwnedBy() == null) {
+            ownedBy = -1;
+        } else {
+            ownedBy = square.getOwnedBy().getIndex();
+        }
+        json.put("owned_by", ownedBy);
+        json.put("number_of_houses", square.getNumberOfHouses());
+        json.put("mortgaged", square.isMortgaged());
+        assertEquals(square.toJson().toString(), json.toString());
     }
 
 }

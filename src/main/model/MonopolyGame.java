@@ -4,17 +4,21 @@ import model.square.EventSquare;
 import model.square.FreeSquare;
 import model.square.PropertySquare;
 import model.square.PropertyType;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import persistence.Writeable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 // handles main game logic
-public class MonopolyGame {
+public class MonopolyGame implements Writeable {
 
     private int currentRound = 1;
 
     private int currentPlayer = 0;
     private ArrayList<Player> players;
+    private boolean alreadyRolled = false;
 
     private ArrayList<Square> board;
 
@@ -27,14 +31,13 @@ public class MonopolyGame {
         board = initBoard();
 
         for (Player player : players) {
-            board.get(0).addPlayer(player);
-            player.setCurrentSquare(0);
+            board.get(player.getCurrentSquare()).addPlayer(player);
         }
     }
 
-    // EFFECTS: defines board details
+    // EFFECTS: creates empty board
     @SuppressWarnings("methodlength")
-    private ArrayList<Square> initBoard() {
+    public static ArrayList<Square> initBoard() {
         return new ArrayList<>(Arrays.asList(
                 new FreeSquare("Go"),
                 new PropertySquare("Mediterranean Avenue", PropertyType.BROWN, 60, 50,
@@ -99,6 +102,8 @@ public class MonopolyGame {
                 new PropertySquare("Ventnor Avenue", PropertyType.YELLOW, 260, 150,
                         new ArrayList<>(Arrays.asList(22, 110, 330, 800, 975, 1150))),
                 new PropertySquare("Water Works", PropertyType.UTILITY, 150, -1, null),
+                new PropertySquare("Marvin Gardens", PropertyType.YELLOW, 280, 150,
+                        new ArrayList<>(Arrays.asList(24, 120, 360, 850, 1025, 1200))),
                 new EventSquare("Go to Jail", () -> {
                     System.out.println("Go to Jail");
                     return null;
@@ -134,9 +139,25 @@ public class MonopolyGame {
         return currentRound;
     }
 
+    public void setCurrentRound(int currentRound) {
+        this.currentRound = currentRound;
+    }
+
+    public boolean isAlreadyRolled() {
+        return alreadyRolled;
+    }
+
+    public void setAlreadyRolled(boolean alreadyRolled) {
+        this.alreadyRolled = alreadyRolled;
+    }
+
     // EFFECTS: return the current player
     public Player getCurrentPlayer() {
         return players.get(currentPlayer);
+    }
+
+    public void setCurrentPlayer(int currentPlayer) {
+        this.currentPlayer = currentPlayer;
     }
 
     // EFFECTS: return the next player in the cycle
@@ -166,8 +187,54 @@ public class MonopolyGame {
         return moveAmount > newSquare;
     }
 
+    public void setPlayers(ArrayList<Player> players) {
+        this.players = players;
+    }
+
+    public ArrayList<Player> getPlayers() {
+        return players;
+    }
+
     public ArrayList<Square> getBoard() {
         return board;
     }
 
+    @Override
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("current_round", currentRound);
+        json.put("current_player", currentPlayer);
+        json.put("already_rolled", alreadyRolled);
+        json.put("players", playersToJson());
+        json.put("board", boardToJson());
+        return json;
+    }
+
+    // EFFECTS: serialize list of players as JSON array
+    private JSONArray playersToJson() {
+        JSONArray jsonArray = new JSONArray();
+
+        for (Player player : players) {
+            jsonArray.put(player.toJson());
+        }
+
+        return jsonArray;
+    }
+
+    // EFFECTS: serialize game board as JSON array
+    private JSONArray boardToJson() {
+        JSONArray jsonArray = new JSONArray();
+
+        for (int i = 0; i < board.size(); i++) {
+            Square square = board.get(i);
+            if (!(square instanceof PropertySquare)) {
+                continue;
+            }
+            JSONObject property = ((PropertySquare) square).toJson();
+            property.put("index", i);
+            jsonArray.put(property);
+        }
+
+        return jsonArray;
+    }
 }
