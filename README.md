@@ -47,3 +47,32 @@ limits as a programmer.
 - As a user, I want to be able to be warned to quit without saving, when quitting from the pause menu ✓
 - As a user, I want to be able to choose a game to load from the main menu ✓
 
+## Instructions for Grader
+
+- You can generate the first required action related to adding Xs to a Y by adding players to a game in the main menu screen
+- You can generate the second required action related to adding Xs to a Y by pressing M to add balance to player
+- You can generate a third action related to adding Xs to a Y by rolling a dice to change the player's position on a board
+- You can generate a fourth action related to adding Xs to a Y by adding 200 to a player's balance if they pass GO
+- You can locate my visual component by opening or creating a new game, and viewing the game board
+- You can save the state of my application by opening the pause menu and selecting the option to save the game
+- You can load the state of my application by choosing a save to load from the main menu screen
+
+### Main menu
+- You can press LEFT and RIGHT arrows to change the number of players to create a game with
+- You can press DOWN and UP arrows to change menu option
+- You can press ENTER is used to select menu option
+- You can press ESCAPE to exit pop-up menu
+
+### Inside game
+- You can press ESCAPE to open pause menu
+- You can press DOWN and UP arrows to change menu option
+- You can press ENTER to select menu option
+
+### Debug functions in game
+- You can press F to print name of current player
+- You can press G to change turn to next player
+- You can press H to print balance of player
+- You can press J to move player 39 squares
+- You can press M to add 10 dollars to the current player's balance
+ 
+
