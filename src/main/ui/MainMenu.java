@@ -62,7 +62,7 @@ public class MainMenu implements Scene {
 
             switch (keyType) {
                 case KeyEvent.VK_ESCAPE:
-                    return false;
+//                    return false;
                 default:
                     break;
             }
