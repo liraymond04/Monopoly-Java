@@ -381,17 +381,20 @@ public class GameScene implements Scene {
     private boolean handleDebugInput(int keyStroke) {
         // TODO - move debug to debug console
         if (keyStroke >= 65 && keyStroke <= 90) {
-            if ((char) keyStroke == 'f') { // print current player
+            if ((char) keyStroke == 'F') { // print current player
                 System.out.println(monopolyGame.getCurrentPlayer().getName());
             }
-            if ((char) keyStroke == 'g') { // move next player
+            if ((char) keyStroke == 'G') { // move next player
                 System.out.println(monopolyGame.nextPlayer().getName());
             }
-            if ((char) keyStroke == 'h') { // print balance
+            if ((char) keyStroke == 'H') { // print balance
                 System.out.println(monopolyGame.getCurrentPlayer().getBalance());
             }
-            if ((char) keyStroke == 'j') {  // move just before GO
+            if ((char) keyStroke == 'J') {  // move just before GO
                 monopolyGame.movePlayer(monopolyGame.getCurrentPlayer(), 39);
+            }
+            if ((char) keyStroke == 'M') {
+                monopolyGame.getCurrentPlayer().addBalance(10);
             }
         }
         if (keyStroke == KeyEvent.VK_ENTER) {
@@ -421,7 +424,7 @@ public class GameScene implements Scene {
         // Go - 34, 77
         // 3 vertical, 7 horizontal
 
-        textGraphics.putString(9, 0, String.valueOf(monopolyGame.getCurrentRound()));
+        textGraphics.putString(1, 1,"ROUND: " + String.valueOf(monopolyGame.getCurrentRound()));
 
         renderPlayerTurn(20, 8);
 
@@ -437,7 +440,7 @@ public class GameScene implements Scene {
     void renderState() {
         switch (gameState) {
             case PAUSED:
-                renderPauseMenu(28, 12);
+                renderPauseMenu(40, 14);
                 break;
             case SAVED:
                 renderSaving(28, 12);
@@ -459,7 +462,7 @@ public class GameScene implements Scene {
     // EFFECTS: draw pause menu
     private void renderPauseMenu(int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 10);
-        textGraphics.putString(startX + 2, startY, "Paused");
+        textGraphics.putString(startX + 2, startY - 1, "Paused");
         int offsetX = 2;
         int offsetY = 2;
         textGraphics.putString(startX + offsetX, startY + offsetY, getPauseOption(0) + "Resume");
@@ -468,7 +471,7 @@ public class GameScene implements Scene {
         textGraphics.putString(startX + offsetX, startY + offsetY + 2, getPauseOption(2) + "Quit to main menu");
         textGraphics.putString(startX + offsetX, startY + offsetY + 3, getPauseOption(3) + "Quit to desktop");
         if (pauseWarning) {
-            renderPauseWarning(startX + 6, startY + 4);
+            renderPauseWarning(startX + 6, startY + 5);
         }
     }
 
