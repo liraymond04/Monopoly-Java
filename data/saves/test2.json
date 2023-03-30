@@ -1,0 +1,204 @@
+{
+  "already_rolled": false,
+  "current_player": 2,
+  "players": [
+    {
+      "current_square": 3,
+      "balance": 200,
+      "name": "play1",
+      "index": 0,
+      "properties": [5]
+    },
+    {
+      "current_square": 20,
+      "balance": 415,
+      "name": "play2",
+      "index": 1,
+      "properties": [
+        1,
+        3
+      ]
+    },
+    {
+      "current_square": 5,
+      "balance": 50,
+      "name": "play3",
+      "index": 2,
+      "properties": [
+        14,
+        15
+      ]
+    }
+  ],
+  "current_round": 9,
+  "board": [
+    {
+      "index": 1,
+      "owned_by": 1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 3,
+      "owned_by": 1,
+      "number_of_houses": 2,
+      "mortgaged": false
+    },
+    {
+      "index": 5,
+      "owned_by": 0,
+      "number_of_houses": 0,
+      "mortgaged": true
+    },
+    {
+      "index": 6,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 8,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 9,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 11,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 12,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 13,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 14,
+      "owned_by": 2,
+      "number_of_houses": 0,
+      "mortgaged": true
+    },
+    {
+      "index": 15,
+      "owned_by": 2,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 16,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 18,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 19,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 21,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 23,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 24,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 25,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 26,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 27,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 28,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 29,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 31,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 32,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 34,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 35,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 37,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    },
+    {
+      "index": 39,
+      "owned_by": -1,
+      "number_of_houses": 0,
+      "mortgaged": false
+    }
+  ]
+}
