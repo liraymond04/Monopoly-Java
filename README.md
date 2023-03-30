@@ -74,5 +74,10 @@ limits as a programmer.
 - You can press H to print balance of player
 - You can press J to move player 39 squares
 - You can press M to add 10 dollars to the current player's balance
- 
 
+## Research resources for Swing
+- https://www.tutorialspoint.com/how-can-we-set-the-background-color-to-a-jpanel-in-java
+- https://stackoverflow.com/questions/5926022/how-to-paint-outside-of-paintcomponent
+- https://stackoverflow.com/questions/10876491/how-to-use-keylistener
+- https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/java-games-keyboard-and-mouse-r2439/
+ 
