@@ -2,18 +2,26 @@ package ui;
 
 import com.googlecode.lanterna.Symbols;
 import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.input.KeyStroke;
-import com.googlecode.lanterna.screen.Screen;
 import model.MonopolyGame;
 import model.Player;
 import model.Square;
 import model.square.PropertySquare;
 
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+
+/*
+TODO:
+ - game state manager
+ - loop over state stack
+ - push and pop game state
+    - new abstract class
+    - enter and leave methods
+    - handle input, update, draw
+ */
 
 // scene that displays the main game
 public class GameScene implements Scene {
@@ -33,7 +41,8 @@ public class GameScene implements Scene {
     private GameState previousGameState;
 
     private Application application;
-    private Screen screen;
+    private ConsoleRenderer screen;
+    private ConsoleRenderer textGraphics;
 
     private MonopolyGame monopolyGame;
     private ArrayList<Square> board;
@@ -57,6 +66,7 @@ public class GameScene implements Scene {
 
         this.application = application;
         screen = application.getScreen();
+        textGraphics = screen;
 
         application.setJsonWriter(saveName);
         if (players != null) {
@@ -128,8 +138,8 @@ public class GameScene implements Scene {
     @Override
     public boolean handleInput() throws IOException {
         boolean result = true;
-        KeyStroke keyStroke = screen.pollInput();
-        if (keyStroke != null) {
+        int keyStroke = screen.pollInput();
+        if (keyStroke != -1) {
             System.out.println(keyStroke);
             screen.clear();
             result &= handleInputState(keyStroke);
@@ -139,7 +149,7 @@ public class GameScene implements Scene {
     }
 
     // EFFECTS: input behaviour for different game states
-    private boolean handleInputState(KeyStroke keyStroke) {
+    private boolean handleInputState(int keyStroke) {
         boolean result = true;
         if (gameState == GameState.PAUSED) {
             handlePauseButton(keyStroke);
@@ -164,11 +174,11 @@ public class GameScene implements Scene {
         return result;
     }
 
-    // REQUIRES: keyStroke != null
+    // REQUIRES: keyStroke != -1
     // EFFECTS: handles pausing with ESC
-    private void handlePauseButton(KeyStroke keyStroke) {
-        switch (keyStroke.getKeyType()) {
-            case Escape:
+    private void handlePauseButton(int keyStroke) {
+        switch (keyStroke) {
+            case KeyEvent.VK_ESCAPE:
                 pauseWarning = false;
 //                saveWarning = true; // toggle true when other changes are made
                 saveOption = 0;
@@ -182,38 +192,38 @@ public class GameScene implements Scene {
         }
     }
 
-    // REQUIRES: keyStroke != null
+    // REQUIRES: keyStroke != -1
     // MODIFIES: this
     // EFFECTS: changes pause option with arrow keys
-    private void handlePauseOptionArrowInput(KeyStroke keyStroke) {
-        switch (keyStroke.getKeyType()) {
-            case ArrowDown:
+    private void handlePauseOptionArrowInput(int keyStroke) {
+        switch (keyStroke) {
+            case KeyEvent.VK_DOWN:
                 if (pauseOption < maxPauseOption) {
                     pauseOption++;
                 } else {
                     pauseOption = 0;
                 }
                 break;
-            case ArrowUp:
+            case KeyEvent.VK_UP:
                 if (pauseOption > 0) {
                     pauseOption--;
                 } else {
                     pauseOption = maxPauseOption;
                 }
                 break;
-            case ArrowLeft:
-            case ArrowRight:
+            case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_RIGHT:
                 saveOption = (saveOption + 1) % 2;
                 break;
         }
     }
 
-    // REQUIRES: keyStroke != null
+    // REQUIRES: keyStroke != -1
     // MODIFIES: this
     // EFFECTS: behaviour for pause option when enter is pressed
-    private boolean handlePauseOptionEnterInput(KeyStroke keyStroke) {
-        switch (keyStroke.getKeyType()) {
-            case Enter:
+    private boolean handlePauseOptionEnterInput(int keyStroke) {
+        switch (keyStroke) {
+            case KeyEvent.VK_ENTER:
                 switch (pauseOption) {
                     case 0: // resume
                         gameState = previousGameState;
@@ -230,7 +240,7 @@ public class GameScene implements Scene {
         return true;
     }
 
-    // REQUIRES: keyStroke != null
+    // REQUIRES: keyStroke != -1
     // MODIFIES: this
     // EFFECTS: behaviour for pause option to quit
     private boolean handlePauseQuitting() {
@@ -249,19 +259,19 @@ public class GameScene implements Scene {
         return false;
     }
 
-    // REQUIRES: keyStroke != null
+    // REQUIRES: keyStroke != -1
     // MODIFIES: this
     // EFFECTS: changes selected turn option with arrow keys
-    private void handleSelectTurnOptionArrowInput(KeyStroke keyStroke) {
-        switch (keyStroke.getKeyType()) {
-            case ArrowDown:
+    private void handleSelectTurnOptionArrowInput(int keyStroke) {
+        switch (keyStroke) {
+            case KeyEvent.VK_DOWN:
                 if (currentTurnOption < maxTurnOption) {
                     currentTurnOption++;
                 } else {
                     currentTurnOption = 0;
                 }
                 break;
-            case ArrowUp:
+            case KeyEvent.VK_UP:
                 if (currentTurnOption > 0) {
                     currentTurnOption--;
                 } else {
@@ -271,13 +281,13 @@ public class GameScene implements Scene {
         }
     }
 
-    // REQUIRES: keyStroke != null
+    // REQUIRES: keyStroke != -1
     // MODIFIES: this
     // EFFECTS: behaviour for selected turn option when enter is pressed
-    private void handleSelectTurnOptionEnterInput(KeyStroke keyStroke) {
+    private void handleSelectTurnOptionEnterInput(int keyStroke) {
         saveWarning = true;
-        switch (keyStroke.getKeyType()) {
-            case Enter:
+        switch (keyStroke) {
+            case KeyEvent.VK_ENTER:
                 switch (currentTurnOption) {
                     case 0: // roll dice
                         rollDice();
@@ -368,27 +378,24 @@ public class GameScene implements Scene {
 
     // REQUIRES: keyStroke != null
     // EFFECTS: inputs for debug functions
-    private boolean handleDebugInput(KeyStroke keyStroke) {
-        switch (keyStroke.getKeyType()) {
-            case Enter:
-//                    System.out.println(monopolyGame.testLand(3));
-                break;
-            case Character:
-                if (keyStroke.getCharacter() == 'f') { // print current player
-                    System.out.println(monopolyGame.getCurrentPlayer().getName());
-                }
-                if (keyStroke.getCharacter() == 'g') { // move next player
-                    System.out.println(monopolyGame.nextPlayer().getName());
-                }
-                if (keyStroke.getCharacter() == 'h') { // print balance
-                    System.out.println(monopolyGame.getCurrentPlayer().getBalance());
-                }
-                if (keyStroke.getCharacter() == 'j') {  // move just before GO
-                    monopolyGame.movePlayer(monopolyGame.getCurrentPlayer(), 39);
-                }
-                break;
-            default:
-                break;
+    private boolean handleDebugInput(int keyStroke) {
+        // TODO - move debug to debug console
+        if (keyStroke >= 65 && keyStroke <= 90) {
+            if ((char) keyStroke == 'f') { // print current player
+                System.out.println(monopolyGame.getCurrentPlayer().getName());
+            }
+            if ((char) keyStroke == 'g') { // move next player
+                System.out.println(monopolyGame.nextPlayer().getName());
+            }
+            if ((char) keyStroke == 'h') { // print balance
+                System.out.println(monopolyGame.getCurrentPlayer().getBalance());
+            }
+            if ((char) keyStroke == 'j') {  // move just before GO
+                monopolyGame.movePlayer(monopolyGame.getCurrentPlayer(), 39);
+            }
+        }
+        if (keyStroke == KeyEvent.VK_ENTER) {
+//            System.out.println(monopolyGame.testLand(3));
         }
         return true;
     }
@@ -403,7 +410,6 @@ public class GameScene implements Scene {
     // EFFECTS: handles drawing to the screen
     @Override
     public boolean render() {
-        TextGraphics textGraphics = screen.newTextGraphics();
         textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
 
 //        textGraphics.putString(4, 4, String.valueOf(numberOfPlayers));
@@ -417,43 +423,41 @@ public class GameScene implements Scene {
 
         textGraphics.putString(9, 0, String.valueOf(monopolyGame.getCurrentRound()));
 
-        renderPlayerTurn(textGraphics, 20, 8);
+        renderPlayerTurn(20, 8);
 
-        renderState(textGraphics);
+        renderState();
 
-        boardRender(textGraphics, 79, 34, 7, 3, 5, 0,
+        boardRender(79, 34, 7, 3, 5, 0,
                 String.valueOf(Symbols.BLOCK_SOLID), null);
 
         return true;
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw game state specific items
-    void renderState(TextGraphics textGraphics) {
+    void renderState() {
         switch (gameState) {
             case PAUSED:
-                renderPauseMenu(textGraphics, 28, 12);
+                renderPauseMenu(28, 12);
                 break;
             case SAVED:
-                renderSaving(textGraphics, 28, 12);
+                renderSaving(28, 12);
                 break;
             case SELECT_TURN_OPTION:
                 break;
             case ROLLING_DICE:
-                renderRollingDice(textGraphics, 28, 12);
+                renderRollingDice(28, 12);
                 break;
             case ENDING_TURN:
-                renderEndingTurn(textGraphics, 28, 12);
+                renderEndingTurn(28, 12);
                 break;
             case PASSING_GO:
-                renderPassingGo(textGraphics, 28, 12);
+                renderPassingGo(28, 12);
                 break;
         }
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw pause menu
-    private void renderPauseMenu(TextGraphics textGraphics, int startX, int startY) {
+    private void renderPauseMenu(int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 10);
         textGraphics.putString(startX + 2, startY, "Paused");
         int offsetX = 2;
@@ -464,19 +468,18 @@ public class GameScene implements Scene {
         textGraphics.putString(startX + offsetX, startY + offsetY + 2, getPauseOption(2) + "Quit to main menu");
         textGraphics.putString(startX + offsetX, startY + offsetY + 3, getPauseOption(3) + "Quit to desktop");
         if (pauseWarning) {
-            renderPauseWarning(textGraphics, startX + 6, startY + 4);
+            renderPauseWarning(startX + 6, startY + 4);
         }
     }
 
-    private void renderSaving(TextGraphics textGraphics, int startX, int startY) {
+    private void renderSaving(int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 4);
         textGraphics.putString(startX + 2, startY + 1, "Saved game");
         textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw save warning
-    private void renderPauseWarning(TextGraphics textGraphics, int startX, int startY) {
+    private void renderPauseWarning(int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 23, 4);
         textGraphics.putString(startX + 2, startY + 1, "Exit without saving?");
         String no = (saveOption == 0 ? "> " : "  ") + "No";
@@ -490,9 +493,8 @@ public class GameScene implements Scene {
         return (option == pauseOption) ? "> " : "  ";
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw player turn information
-    private void renderPlayerTurn(TextGraphics textGraphics, int startX, int startY) {
+    private void renderPlayerTurn(int startX, int startY) {
         Player currentPlayer = monopolyGame.getCurrentPlayer();
         textGraphics.putString(startX, startY, currentPlayer.getName() + "'s turn");
 
@@ -501,12 +503,11 @@ public class GameScene implements Scene {
 
         textGraphics.putString(startX, startY + 2, "Current balance: " + currentPlayer.getBalance());
 
-        playerTurnOptions(textGraphics, startX, startY, offsetX, offsetY);
+        playerTurnOptions(startX, startY, offsetX, offsetY);
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw turn options
-    private void playerTurnOptions(TextGraphics textGraphics, int startX, int startY, int offsetX, int offsetY) {
+    private void playerTurnOptions(int startX, int startY, int offsetX, int offsetY) {
         if (monopolyGame.isAlreadyRolled()) {
             textGraphics.setForegroundColor(TextColor.ANSI.RED);
         }
@@ -523,9 +524,8 @@ public class GameScene implements Scene {
         textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw rolling dice alert window
-    private void renderRollingDice(TextGraphics textGraphics, int startX, int startY) {
+    private void renderRollingDice(int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 4);
         if (!monopolyGame.isAlreadyRolled()) {
             textGraphics.putString(startX + 2, startY + 1, "Rolled a " + rollAmount);
@@ -535,9 +535,8 @@ public class GameScene implements Scene {
         textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw ending turn alert window
-    private void renderEndingTurn(TextGraphics textGraphics, int startX, int startY) {
+    private void renderEndingTurn(int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 4);
         if (monopolyGame.isAlreadyRolled()) {
             textGraphics.putString(startX + 2, startY + 1, "It is now "
@@ -548,9 +547,8 @@ public class GameScene implements Scene {
         textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw passing go alert window
-    private void renderPassingGo(TextGraphics textGraphics, int startX, int startY) {
+    private void renderPassingGo(int startX, int startY) {
         Application.drawBox(textGraphics, startX, startY, 34, 4);
         textGraphics.putString(startX + 2, startY + 1,
                 monopolyGame.getCurrentPlayer().getName() + " passed GO, collect 200");
@@ -564,25 +562,23 @@ public class GameScene implements Scene {
 
     // REQUIRES: boardRender != null && board != null
     // EFFECTS: draw board from board model
-    private void boardRender(TextGraphics textGraphics,
-                             int startX, int startY, int horizontalSize, int verticalSize,
+    private void boardRender(int startX, int startY, int horizontalSize, int verticalSize,
                              int horizontalOffset, int verticalOffset,
                              String s, TextColor color) {
         int length = (board.size() + 1) / 4;
-        boardRenderRows(textGraphics, startX, startY, length,
+        boardRenderRows(startX, startY, length,
                 -horizontalSize, 0, horizontalOffset, verticalOffset, 0, s, color);
-        boardRenderRows(textGraphics, startX - length * horizontalSize, startY, length,
+        boardRenderRows(startX - length * horizontalSize, startY, length,
                 0, -verticalSize, horizontalOffset, verticalOffset, length, s, color);
-        boardRenderRows(textGraphics, startX - length * horizontalSize, startY - length * verticalSize, length,
+        boardRenderRows(startX - length * horizontalSize, startY - length * verticalSize, length,
                 horizontalSize, 0, horizontalOffset, verticalOffset, length * 2, s, color);
-        boardRenderRows(textGraphics, startX, startY - (length - 1) * verticalSize, length - 1,
+        boardRenderRows(startX, startY - (length - 1) * verticalSize, length - 1,
                 0, verticalSize, horizontalOffset, verticalOffset, length * 3 + 1, s, color);
     }
 
     // REQUIRES: boardRender != null && board != null
     // EFFECTS: draw rows from board model
-    private void boardRenderRows(TextGraphics textGraphics,
-                                 int startX, int startY, int length,
+    private void boardRenderRows(int startX, int startY, int length,
                                  int horizontalMove, int verticalMove,
                                  int horizontalOffset, int verticalOffset, int iterateStart,
                                  String s, TextColor c) {
@@ -601,15 +597,14 @@ public class GameScene implements Scene {
                 }
                 houses = propertySquare.getNumberOfHouses();
             }
-            squareRender(textGraphics, square, isProperty, startX, startY, horizontalMove, verticalMove,
+            squareRender(square, isProperty, startX, startY, horizontalMove, verticalMove,
                     horizontalOffset, verticalOffset, s, color, i, houses);
         }
     }
 
     // REQUIRES: boardRender != null && board != null
     // EFFECTS: draw individual square details
-    private void squareRender(TextGraphics textGraphics,
-                              Square square, boolean isProperty,
+    private void squareRender(Square square, boolean isProperty,
                               int startX, int startY,
                               int horizontalMove, int verticalMove,
                               int horizontalOffset, int verticalOffset,

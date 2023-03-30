@@ -2,7 +2,7 @@ package ui;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        Application application = new Application(94, 40);
+        Application application = new Application(94, 40, 10, 20);
 
         application.start();
     }

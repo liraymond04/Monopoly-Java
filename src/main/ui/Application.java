@@ -1,22 +1,21 @@
 package ui;
 
 import com.googlecode.lanterna.Symbols;
-import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.screen.Screen;
-import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import model.MonopolyGame;
 import model.Player;
 import persistence.JsonReader;
 import persistence.JsonWriter;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
 // handles application window logic
-public class Application {
+public class Application extends JFrame {
     private static final String SAVES = "./data/saves/";
 
-    private Screen screen;
+    private ConsoleRenderer screen;
     private Scene scene;
 
     private MainMenu mainMenu;
@@ -26,12 +25,20 @@ public class Application {
     private JsonReader jsonReader;
 
     // EFFECTS: constructor initializes screen dimensions
-    Application(int screenWidth, int screenHeight) throws Exception {
-        TerminalSize terminalSize = new TerminalSize(screenWidth, screenHeight);
-        screen = new DefaultTerminalFactory().setInitialTerminalSize(terminalSize).createScreen();
+    Application(int screenWidth, int screenHeight, int charWidth, int charHeight) throws Exception {
+        setTitle("Monopoly");
 
-        screen.startScreen();
-        screen.setCursorPosition(null); // turn off cursor
+        screen = new ConsoleRenderer(screenWidth, screenHeight, charWidth, charHeight);
+        screen.setBackground(Color.BLACK);
+
+        add(screen, BorderLayout.CENTER);
+        setSize(screenWidth * charWidth, screenHeight * charHeight);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+
+//        screen.startScreen();
+//        screen.setCursorPosition(null); // turn off cursor
 
         createMainMenu();
         setMainMenu();
@@ -43,7 +50,7 @@ public class Application {
 
     // MODIFIES: textGraphics
     // EFFECTS: draws box with ANSI characters
-    public static void drawBox(TextGraphics textGraphics, int x, int y, int width, int height) {
+    public static void drawBox(ConsoleRenderer textGraphics, int x, int y, int width, int height) {
         textGraphics.putString(x, y, "╭");
         textGraphics.putString(x + width, y, "╮");
         textGraphics.putString(x, y + height, "╰");
@@ -61,6 +68,7 @@ public class Application {
             textGraphics.putString(x + i, y, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
             textGraphics.putString(x + i, y + height, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
         }
+
     }
 
     // MODIFIES: this
@@ -74,10 +82,10 @@ public class Application {
             screen.refresh();
         }
 
-        screen.close();
+        dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
     }
 
-    public Screen getScreen() {
+    public ConsoleRenderer getScreen() {
         return screen;
     }
 
