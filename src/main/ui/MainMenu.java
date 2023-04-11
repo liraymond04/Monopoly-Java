@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
+// scene that displays the main menu
 public class MainMenu implements Scene {
 
     private static final int PLAYER_NAME_MAX_LENGTH = 24;
