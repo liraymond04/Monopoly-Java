@@ -1,6 +1,8 @@
 package ui;
 
 import com.googlecode.lanterna.Symbols;
+import model.Event;
+import model.EventLog;
 import model.MonopolyGame;
 import model.Player;
 import persistence.JsonReader;
@@ -9,10 +11,12 @@ import persistence.JsonWriter;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.ArrayList;
+import java.util.Date;
 
 // handles application window logic
-public class Application extends JFrame {
+public class Application extends JFrame implements WindowListener {
     private static final String SAVES = "./data/saves/";
 
     private ConsoleRenderer screen;
@@ -36,6 +40,8 @@ public class Application extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
+
+        addWindowListener(this);
 
 //        screen.startScreen();
 //        screen.setCursorPosition(null); // turn off cursor
@@ -143,5 +149,51 @@ public class Application extends JFrame {
         } catch (Exception e) {
             System.out.println("Failed to open file");
         }
+    }
+
+    // EFFECTS: runs when window is opened, required implementation for window listener
+    @Override
+    public void windowOpened(WindowEvent e) {
+
+    }
+
+    // EFFECTS: print event log to console when window is closing
+    @Override
+    public void windowClosing(WindowEvent e) {
+        System.out.println("Event Log: ");
+        Date prevDate = null;
+        for (Event event : EventLog.getInstance()) {
+            System.out.println(event + "\n");
+        }
+    }
+
+    // EFFECTS: runs when window is closed, required implementation for window listener
+    @Override
+    public void windowClosed(WindowEvent e) {
+
+    }
+
+    // EFFECTS: runs when window is iconified, required implementation for window listener
+    @Override
+    public void windowIconified(WindowEvent e) {
+
+    }
+
+    // EFFECTS: runs when window is deiconified, required implementation for window listener
+    @Override
+    public void windowDeiconified(WindowEvent e) {
+
+    }
+
+    // EFFECTS: runs when window is activated, required implementation for window listener
+    @Override
+    public void windowActivated(WindowEvent e) {
+
+    }
+
+    // EFFECTS: runs when window is deactivated, required implementation for window listener
+    @Override
+    public void windowDeactivated(WindowEvent e) {
+
     }
 }

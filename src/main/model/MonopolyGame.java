@@ -26,12 +26,17 @@ public class MonopolyGame implements Writeable {
     // EFFECTS: constructor initializes board data and sets player positions
     public MonopolyGame(ArrayList<Player> players) {
         this.players = players;
+        EventLog.getInstance().logEvent(new Event("Initialized " + players.size() + " game players"));
 
         // init board
         board = initBoard();
+        EventLog.getInstance().logEvent(new Event("Initialized game board"));
 
         for (Player player : players) {
             board.get(player.getCurrentSquare()).addPlayer(player);
+            EventLog.getInstance().logEvent(new Event(
+                    "Assigned player " + player.getName() + " to square " + player.getCurrentSquare()
+                            + ", balance " + player.getBalance()));
         }
     }
 
@@ -183,7 +188,11 @@ public class MonopolyGame implements Writeable {
         int moveAmount = currentSquare + move;
         int newSquare = moveAmount % board.size();
         board.get(newSquare).addPlayer(player);
+        EventLog.getInstance().logEvent(new Event("Move player " + player.getName() + " " + move + " spaces"));
         player.setCurrentSquare(newSquare);
+        if (moveAmount > newSquare) {
+            EventLog.getInstance().logEvent(new Event("Player " + player.getName() + " passed GO"));
+        }
         return moveAmount > newSquare;
     }
 

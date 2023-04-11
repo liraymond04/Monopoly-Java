@@ -41,6 +41,7 @@ public class Player implements Writeable {
 
     public void setCurrentSquare(int square) {
         currentSquare = square;
+        EventLog.getInstance().logEvent(new Event("Set player " + getName() + " current square to " + currentSquare));
     }
 
     public int getBalance() {
@@ -75,6 +76,8 @@ public class Player implements Writeable {
     // EFFECTS: adds given value to balance, and returns new balance
     public int addBalance(int balance) {
         this.balance += balance;
+        EventLog.getInstance().logEvent(new Event("Add " + balance + " to player " + getName() + " balance"
+                + "\nPlayer balance now " + this.balance));
         return this.balance;
     }
 
@@ -82,6 +85,8 @@ public class Player implements Writeable {
     // EFFECTS: removes given value to balance, and returns new balance
     public int removeBalance(int balance) {
         this.balance -= balance;
+        EventLog.getInstance().logEvent(new Event("Remove " + balance + " from player " + getName() + " balance"
+                + "\nPlayer balance now " + this.balance));
         return this.balance;
     }
 
