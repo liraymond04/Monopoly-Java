@@ -80,4 +80,36 @@ limits as a programmer.
 - https://stackoverflow.com/questions/5926022/how-to-paint-outside-of-paintcomponent
 - https://stackoverflow.com/questions/10876491/how-to-use-keylistener
 - https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/java-games-keyboard-and-mouse-r2439/
- 
+
+## Phase 4: Task 2
+```
+Event Log: 
+Tue Apr 11 10:29:26 PDT 2023
+Initialized 3 game players
+
+Tue Apr 11 10:29:26 PDT 2023
+Initialized game board
+
+Tue Apr 11 10:29:26 PDT 2023
+Assigned player play1 to square 3, balance 200
+
+Tue Apr 11 10:29:26 PDT 2023
+Assigned player play2 to square 20, balance 415
+
+Tue Apr 11 10:29:26 PDT 2023
+Assigned player play3 to square 5, balance 50
+
+Tue Apr 11 10:29:28 PDT 2023
+Move player play3 4 spaces
+
+Tue Apr 11 10:29:28 PDT 2023
+Set player play3 current square to 9
+
+Tue Apr 11 10:29:28 PDT 2023
+Add 10 to player play3 balance
+Player balance now 60
+
+Tue Apr 11 10:29:29 PDT 2023
+Add 10 to player play3 balance
+Player balance now 70
+```
