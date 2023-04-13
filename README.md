@@ -114,3 +114,18 @@ Add 10 to player play3 balance
 Player balance now 70
 ```
 
+## Phase 4: Task 3
+
+If I were to refactor, I would change the ConsoleRenderer class to the singleton pattern. In the GameScene and MainScene
+classes, a private field of the Application instance is needed so that the class can access the methods required for
+drawing to the screen. However, we know that there should only ever be a single instance of the Application class, so
+the singleton pattern would be appropriate to access these methods.
+
+Since the instance of Application is only ever used by the scenes to draw to the screen, we can instead make the
+ConsoleRenderer a singleton and directly access its implementation. By doing this, we avoid having to access the
+Application class when drawing to the screen, and we can just let it handle the main application loop.
+
+This creates an intuitive separation in logic, as the ConsoleRenderer class can handle drawing while the Application
+class handles the higher level application logic. Making ConsoleRenderer a singleton also allows for easy access to the
+draw methods in classes that need them, such as the GameScene and MainScene.
+
