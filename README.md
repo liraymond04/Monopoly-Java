@@ -2,7 +2,7 @@
 
 ## About
 
-This is a **Java** clone of *Monopoly* created for a CPSC 210 project based
+This is a **Java** clone of *Monopoly* created for a school project based
 on the [official rule-set](https://www.officialgamerules.org/monopoly).
 Monopoly is a turn-based multiplayer board game, where the objective
 of the game is to not go bankrupt and outlive the other players by
@@ -27,7 +27,7 @@ Many of these issues with the user interface are due to the game being designed
 for gamepad controllers. This usually makes the game unintuitive and unplayable
 for desktop users, most of whom use mouse and keyboard to play.
 
-As a project for CPSC 210, I think Monopoly is a decently complex game that
+As a project for school, I think Monopoly is a decently complex game that
 will be interesting to design and implement, and is achievable within my
 limits as a programmer.
 
