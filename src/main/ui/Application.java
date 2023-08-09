@@ -1,25 +1,22 @@
 package ui;
 
 import com.googlecode.lanterna.Symbols;
-import model.Event;
-import model.EventLog;
+import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.graphics.TextGraphics;
+import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import model.MonopolyGame;
 import model.Player;
 import persistence.JsonReader;
 import persistence.JsonWriter;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.util.ArrayList;
-import java.util.Date;
 
 // handles application window logic
-public class Application extends JFrame implements WindowListener {
+public class Application {
     private static final String SAVES = "./data/saves/";
 
-    private ConsoleRenderer screen;
+    private Screen screen;
     private Scene scene;
 
     private MainMenu mainMenu;
@@ -29,22 +26,12 @@ public class Application extends JFrame implements WindowListener {
     private JsonReader jsonReader;
 
     // EFFECTS: constructor initializes screen dimensions
-    Application(int screenWidth, int screenHeight, int charWidth, int charHeight) throws Exception {
-        setTitle("Monopoly");
+    Application(int screenWidth, int screenHeight) throws Exception {
+        TerminalSize terminalSize = new TerminalSize(screenWidth, screenHeight);
+        screen = new DefaultTerminalFactory().setInitialTerminalSize(terminalSize).createScreen();
 
-        screen = new ConsoleRenderer(screenWidth, screenHeight, charWidth, charHeight);
-        screen.setBackground(Color.BLACK);
-
-        add(screen, BorderLayout.CENTER);
-        setSize(screenWidth * charWidth, screenHeight * charHeight);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setVisible(true);
-
-        addWindowListener(this);
-
-//        screen.startScreen();
-//        screen.setCursorPosition(null); // turn off cursor
+        screen.startScreen();
+        screen.setCursorPosition(null); // turn off cursor
 
         createMainMenu();
         setMainMenu();
@@ -56,7 +43,7 @@ public class Application extends JFrame implements WindowListener {
 
     // MODIFIES: textGraphics
     // EFFECTS: draws box with ANSI characters
-    public static void drawBox(ConsoleRenderer textGraphics, int x, int y, int width, int height) {
+    public static void drawBox(TextGraphics textGraphics, int x, int y, int width, int height) {
         textGraphics.putString(x, y, "╭");
         textGraphics.putString(x + width, y, "╮");
         textGraphics.putString(x, y + height, "╰");
@@ -74,7 +61,6 @@ public class Application extends JFrame implements WindowListener {
             textGraphics.putString(x + i, y, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
             textGraphics.putString(x + i, y + height, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
         }
-
     }
 
     // MODIFIES: this
@@ -88,10 +74,10 @@ public class Application extends JFrame implements WindowListener {
             screen.refresh();
         }
 
-        dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+        screen.close();
     }
 
-    public ConsoleRenderer getScreen() {
+    public Screen getScreen() {
         return screen;
     }
 
@@ -149,51 +135,5 @@ public class Application extends JFrame implements WindowListener {
         } catch (Exception e) {
             System.out.println("Failed to open file");
         }
-    }
-
-    // EFFECTS: runs when window is opened, required implementation for window listener
-    @Override
-    public void windowOpened(WindowEvent e) {
-
-    }
-
-    // EFFECTS: print event log to console when window is closing
-    @Override
-    public void windowClosing(WindowEvent e) {
-        System.out.println("Event Log: ");
-        Date prevDate = null;
-        for (Event event : EventLog.getInstance()) {
-            System.out.println(event + "\n");
-        }
-    }
-
-    // EFFECTS: runs when window is closed, required implementation for window listener
-    @Override
-    public void windowClosed(WindowEvent e) {
-
-    }
-
-    // EFFECTS: runs when window is iconified, required implementation for window listener
-    @Override
-    public void windowIconified(WindowEvent e) {
-
-    }
-
-    // EFFECTS: runs when window is deiconified, required implementation for window listener
-    @Override
-    public void windowDeiconified(WindowEvent e) {
-
-    }
-
-    // EFFECTS: runs when window is activated, required implementation for window listener
-    @Override
-    public void windowActivated(WindowEvent e) {
-
-    }
-
-    // EFFECTS: runs when window is deactivated, required implementation for window listener
-    @Override
-    public void windowDeactivated(WindowEvent e) {
-
     }
 }

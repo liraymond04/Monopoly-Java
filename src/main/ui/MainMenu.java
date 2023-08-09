@@ -1,23 +1,27 @@
 package ui;
 
 import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.graphics.TextGraphics;
+import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.input.KeyType;
+import com.googlecode.lanterna.screen.Screen;
 import model.Player;
 
-import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-// scene that displays the main menu
 public class MainMenu implements Scene {
 
     private static final int PLAYER_NAME_MAX_LENGTH = 24;
 
     private Application application;
-    private ConsoleRenderer screen;
+    private Screen screen;
 
     private ArrayList<String> banner;
 
@@ -49,12 +53,12 @@ public class MainMenu implements Scene {
     // EFFECTS: handles main input logic
     @Override
     public boolean handleInput() throws IOException {
-        int keyStroke = screen.pollInput();
-        if (keyStroke != -1) {
+        KeyStroke keyStroke = screen.pollInput();
+        if (keyStroke != null) {
             System.out.println(keyStroke);
             screen.clear();
 
-            int keyType = keyStroke;
+            KeyType keyType = keyStroke.getKeyType();
 
             handleArrowInput(keyType);
             if (!handleEnterInput(keyType)) {
@@ -62,8 +66,8 @@ public class MainMenu implements Scene {
             }
 
             switch (keyType) {
-                case KeyEvent.VK_ESCAPE:
-//                    return false;
+                case Escape:
+                    return false;
                 default:
                     break;
             }
@@ -73,24 +77,24 @@ public class MainMenu implements Scene {
 
     // MODIFIES: this
     // EFFECTS: change number of players with horizontal arrows, and options with vertical arrows
-    private void handleArrowInput(int keyType) {
+    private void handleArrowInput(KeyType keyType) {
         switch (keyType) {
-            case KeyEvent.VK_RIGHT:
+            case ArrowRight:
                 if (numberOfPlayers < maxPlayers) {
                     numberOfPlayers++;
                 }
                 break;
-            case KeyEvent.VK_LEFT:
+            case ArrowLeft:
                 if (numberOfPlayers > minPlayers) {
                     numberOfPlayers--;
                 }
                 break;
-            case KeyEvent.VK_DOWN:
+            case ArrowDown:
                 if (currentOption < maxOption) {
                     currentOption++;
                 }
                 break;
-            case KeyEvent.VK_UP:
+            case ArrowUp:
                 if (currentOption > 0) {
                     currentOption--;
                 }
@@ -100,9 +104,9 @@ public class MainMenu implements Scene {
 
     // MODIFIES: this
     // EFFECTS: behaviour for selected option when enter is pressed
-    private boolean handleEnterInput(int keyType) {
+    private boolean handleEnterInput(KeyType keyType) {
         switch (keyType) {
-            case KeyEvent.VK_ENTER:
+            case Enter:
                 switch (currentOption) {
                     case 0: // new game
                         newGame();
@@ -146,11 +150,11 @@ public class MainMenu implements Scene {
     // EFFECTS: return list of new players
     private ArrayList<Player> initPlayers() {
         ArrayList<Player> result = new ArrayList<>();
-        ConsoleRenderer textGraphics = screen;
+        TextGraphics textGraphics = screen.newTextGraphics();
         textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
         for (int i = 0; i < numberOfPlayers; i++) {
             try {
-                result.add(createNewPlayer(textGraphics, 20, 21, 50, 3, i));
+                result.add(createNewPlayer(textGraphics, 20, 11, 50, 3, i));
             } catch (Exception e) {
                 System.out.print("Failed to add player " + (i + 1));
                 return null;
@@ -162,20 +166,18 @@ public class MainMenu implements Scene {
     // REQUIRES: textGraphics != null
     // MODIFIES: this
     // EFFECTS: create individual player object with input box
-    private Player createNewPlayer(ConsoleRenderer textGraphics, int x, int y,
+    private Player createNewPlayer(TextGraphics textGraphics, int x, int y,
                                    int width, int height, int i) throws Exception {
         String name = "";
         while (true) {
             String textBox = "Enter Player " + (i + 1) + " name: " + name;
-            int keyStroke = screen.pollInput();
+            KeyStroke keyStroke = screen.pollInput();
             render();
-            if (keyStroke != -1) {
-                screen.clear();
-                screen.refresh();
-                switch (keyStroke) {
-                    case KeyEvent.VK_ENTER:
+            if (keyStroke != null) {
+                switch (keyStroke.getKeyType()) {
+                    case Enter:
                         return new Player(i, name, 0, 200);
-                    case KeyEvent.VK_ESCAPE:
+                    case Escape:
                         throw new Exception();
                     default:
                         name = updateName(keyStroke, name);
@@ -190,15 +192,17 @@ public class MainMenu implements Scene {
 
     // REQUIRES: keyStroke != null
     // EFFECTS: update name string with keystroke
-    private String updateName(int keyStroke, String name) {
+    private String updateName(KeyStroke keyStroke, String name) {
         String result = name;
-        if (keyStroke >= 65 && keyStroke <= 90) {
-            if (result.length() < PLAYER_NAME_MAX_LENGTH) {
-                result += (char) keyStroke;
-            }
-        }
-        if (keyStroke == KeyEvent.VK_BACK_SPACE) {
-            result = removeLastChar(result);
+        switch (keyStroke.getKeyType()) {
+            case Character:
+                if (result.length() < PLAYER_NAME_MAX_LENGTH) {
+                    result += keyStroke.getCharacter();
+                }
+                break;
+            case Backspace:
+                result = removeLastChar(result);
+                break;
         }
         return result;
     }
@@ -213,43 +217,42 @@ public class MainMenu implements Scene {
     // EFFECTS: return name of save to load
     private String chooseSave() throws Exception {
         // TODO - scrolling for more files
-        screen.setForegroundColor(TextColor.ANSI.WHITE);
+        TextGraphics textGraphics = screen.newTextGraphics();
+        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
         ArrayList<String> saves = getSaves();
         int currentSaveOption = 0;
         while (true) {
-            int keyStroke = screen.pollInput();
+            KeyStroke keyStroke = screen.pollInput();
             render();
-            if (keyStroke != -1) {
-                screen.clear();
-                switch (keyStroke) {
-                    case KeyEvent.VK_ENTER:
+            if (keyStroke != null) {
+                switch (keyStroke.getKeyType()) {
+                    case Enter:
                         return saves.get(currentSaveOption);
-                    case KeyEvent.VK_ESCAPE:
+                    case Escape:
                         throw new Exception();
-                    case KeyEvent.VK_UP:
+                    case ArrowUp:
                         currentSaveOption--;
                         break;
-                    case KeyEvent.VK_DOWN:
+                    case ArrowDown:
                         currentSaveOption++;
                         break;
                 }
             }
-            chooseSaveRender(screen, saves, currentSaveOption);
+            chooseSaveRender(textGraphics, saves, currentSaveOption);
         }
     }
 
     // REQUIRES: textGraphics != null
     // EFFECTS: renders choose save window
-    private void chooseSaveRender(ConsoleRenderer textGraphics,
-                                  ArrayList<String> saves, int option) throws IOException {
+    private void chooseSaveRender(TextGraphics textGraphics, ArrayList<String> saves, int option) throws IOException {
         if (option < 0) {
             option = saves.size() - 1;
         } else if (option >= saves.size()) {
             option = 0;
         }
-        Application.drawBox(textGraphics, 20, 21, 50, 14);
-        textGraphics.putString(22, 21, "Choose save");
-        drawSaves(textGraphics, 23, 22, saves, option);
+        Application.drawBox(textGraphics, 20, 11, 50, 14);
+        textGraphics.putString(22, 11, "Choose save");
+        drawSaves(textGraphics, 23, 12, saves, option);
         screen.refresh();
     }
 
@@ -265,7 +268,7 @@ public class MainMenu implements Scene {
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draws list of saves
-    private void drawSaves(ConsoleRenderer textGraphics, int startX, int startY, ArrayList<String> saves, int option) {
+    private void drawSaves(TextGraphics textGraphics, int startX, int startY, ArrayList<String> saves, int option) {
         for (int i = 0; i < saves.size(); i++) {
             textGraphics.putString(startX, startY + i, (option == i ? "> " : "  ") + saves.get(i));
         }
@@ -281,7 +284,7 @@ public class MainMenu implements Scene {
     // EFFECTS: handles drawing to the screen
     @Override
     public boolean render() {
-        ConsoleRenderer textGraphics = screen;
+        TextGraphics textGraphics = screen.newTextGraphics();
         textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
 
         int x = 11;
