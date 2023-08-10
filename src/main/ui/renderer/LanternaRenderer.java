@@ -9,6 +9,7 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 
 import java.io.IOException;
 
+// class implementing a lanterna graphics renderer
 public class LanternaRenderer extends IRenderer {
     private final Screen screen;
     private final TextGraphics textGraphics;

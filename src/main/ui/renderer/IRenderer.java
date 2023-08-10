@@ -5,6 +5,7 @@ import com.googlecode.lanterna.input.KeyStroke;
 
 import java.io.IOException;
 
+// abstrct class representing a graphics renderer
 public abstract class IRenderer {
     private int screenWidth;
     private int screenHeight;

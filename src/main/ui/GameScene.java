@@ -2,58 +2,67 @@ package ui;
 
 import com.googlecode.lanterna.Symbols;
 import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
-import com.googlecode.lanterna.screen.Screen;
 import model.MonopolyGame;
 import model.Player;
 import model.Square;
 import model.square.PropertySquare;
+import ui.renderer.IRenderer;
+import ui.state.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Random;
+import java.util.concurrent.Callable;
 
 // scene that displays the main game
 public class GameScene implements Scene {
 
-    enum GameState {
-        PAUSED,
-        SAVED,
-        SELECT_TURN_OPTION,
-        ROLLING_DICE,
-        ENDING_TURN,
-        PASSING_GO
+    public class SwitchState implements Callable<Void> {
+        IState state;
+
+        public void setState(IState state) {
+            this.state = state;
+        }
+
+        public Void call() {
+            gameState = state;
+            return null;
+        }
     }
 
-    private final boolean autoSave = false;
+    private final SwitchState switchState = new SwitchState();
 
-    private GameState gameState;
-    private GameState previousGameState;
+    public static class SaveWarning {
+        @SuppressWarnings({"checkstyle:VisibilityModifier", "checkstyle:SuppressWarnings"})
+        public boolean value = true;
+    }
 
-    private IRenderer renderer;
+    public static final SaveWarning saveWarning = new SaveWarning();
+
+    public static class TurnOptions {
+        @SuppressWarnings({"checkstyle:VisibilityModifier", "checkstyle:SuppressWarnings"})
+        public int current = 0;
+        public final int max = 5;
+    }
+
+    public static final TurnOptions turnOptions = new TurnOptions();
+
+    private IState gameState;
+    @SuppressWarnings({"checkstyle:VisibilityModifier", "checkstyle:SuppressWarnings"})
+    public static SelectTurnOptionState turnOptionState;
+
+    private final IRenderer renderer;
 
     private MonopolyGame monopolyGame;
-    private ArrayList<Square> board;
+    private final ArrayList<Square> board;
 
-    private int pauseOption = 0;
-    private int maxPauseOption = 3;
-    private boolean pauseWarning = false;
-    private boolean saveWarning = true;
-    private int saveOption = 0;
-
-    private int currentTurnOption = 0;
-    private int maxTurnOption = 5;
-
-    private int rollAmount;
+    @SuppressWarnings({"checkstyle:VisibilityModifier", "checkstyle:SuppressWarnings"})
+    public static boolean autoSave = false;
 
     ArrayList<String> boardRender;
 
     // EFFECTS: constructor initializes screen object, monopoly game object, game state, and strings for rendering
-    GameScene(Application application, ArrayList<Player> players, String saveName) {
-        gameState = GameState.SELECT_TURN_OPTION;
-
+    GameScene(ArrayList<Player> players, String saveName) {
         Application application = Application.getInstance();
         renderer = application.getRenderer();
 
@@ -73,8 +82,10 @@ public class GameScene implements Scene {
         }
 
         board = monopolyGame.getBoard();
-
         boardRender = initBoard();
+
+        turnOptionState = new SelectTurnOptionState(monopolyGame, switchState);
+        gameState = turnOptionState;
     }
 
     // EFFECTS: array of strings for rendering the monopoly board to the screen
@@ -145,204 +156,16 @@ public class GameScene implements Scene {
 
     // REQUIRES: keyStroke != null
     // EFFECTS: handles pausing with ESC
-    private void handlePauseButton(KeyStroke keyStroke) {
+    private void handlePauseButton(KeyStroke keyStroke) throws Exception {
         switch (keyStroke.getKeyType()) {
             case Escape:
-                pauseWarning = false;
-//                saveWarning = true; // toggle true when other changes are made
-                saveOption = 0;
-                if (gameState == GameState.PAUSED) {
-                    gameState = previousGameState;
+                if (gameState.getEnum() == GameState.PAUSED) {
+                    gameState.switchState(((PauseState) gameState).getPreviousState());
                     break;
                 }
-                previousGameState = gameState;
-                gameState = GameState.PAUSED;
+                gameState = new PauseState(monopolyGame, saveWarning, gameState, switchState);
                 break;
         }
-    }
-
-    // REQUIRES: keyStroke != null
-    // MODIFIES: this
-    // EFFECTS: changes pause option with arrow keys
-    private void handlePauseOptionArrowInput(KeyStroke keyStroke) {
-        switch (keyStroke.getKeyType()) {
-            case ArrowDown:
-                if (pauseOption < maxPauseOption) {
-                    pauseOption++;
-                } else {
-                    pauseOption = 0;
-                }
-                break;
-            case ArrowUp:
-                if (pauseOption > 0) {
-                    pauseOption--;
-                } else {
-                    pauseOption = maxPauseOption;
-                }
-                break;
-            case ArrowLeft:
-            case ArrowRight:
-                saveOption = (saveOption + 1) % 2;
-                break;
-        }
-    }
-
-    // REQUIRES: keyStroke != null
-    // MODIFIES: this
-    // EFFECTS: behaviour for pause option when enter is pressed
-    private boolean handlePauseOptionEnterInput(KeyStroke keyStroke) {
-        switch (keyStroke.getKeyType()) {
-            case Enter:
-                switch (pauseOption) {
-                    case 0: // resume
-                        gameState = previousGameState;
-                        break;
-                    case 1: // save game
-                        gameState = GameState.SAVED;
-                        saveWarning = false;
-                        break;
-                    default:
-                        return handlePauseQuitting();
-                }
-                break;
-        }
-        return true;
-    }
-
-    // REQUIRES: keyStroke != null
-    // MODIFIES: this
-    // EFFECTS: behaviour for pause option to quit
-    private boolean handlePauseQuitting() {
-        if (pauseWarning && saveOption == 0) {
-            pauseWarning = false;
-            return true;
-        }
-        if (saveWarning && !(pauseWarning && saveOption == 1)) {
-            pauseWarning = true;
-            return true;
-        }
-        if (pauseOption == 2) {
-            application.setMainMenu();
-            return true;
-        }
-        return false;
-    }
-
-    // REQUIRES: keyStroke != null
-    // MODIFIES: this
-    // EFFECTS: changes selected turn option with arrow keys
-    private void handleSelectTurnOptionArrowInput(KeyStroke keyStroke) {
-        switch (keyStroke.getKeyType()) {
-            case ArrowDown:
-                if (currentTurnOption < maxTurnOption) {
-                    currentTurnOption++;
-                } else {
-                    currentTurnOption = 0;
-                }
-                break;
-            case ArrowUp:
-                if (currentTurnOption > 0) {
-                    currentTurnOption--;
-                } else {
-                    currentTurnOption = maxTurnOption;
-                }
-                break;
-        }
-    }
-
-    // REQUIRES: keyStroke != null
-    // MODIFIES: this
-    // EFFECTS: behaviour for selected turn option when enter is pressed
-    private void handleSelectTurnOptionEnterInput(KeyStroke keyStroke) {
-        saveWarning = true;
-        switch (keyStroke.getKeyType()) {
-            case Enter:
-                switch (currentTurnOption) {
-                    case 0: // roll dice
-                        rollDice();
-                        break;
-                    case 1: // mortgage
-                        break;
-                    case 2: // lift mortgage
-                        break;
-                    case 3: // sell property
-                        break;
-                    case 4: // sell house
-                        break;
-                    case 5: // end turn
-                        endTurn();
-                        break;
-                }
-                break;
-        }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: revert game state to pause menu and save
-    private void saved() {
-        gameState = GameState.PAUSED;
-        application.saveMonopolyGame(monopolyGame);
-    }
-
-    // MODIFIES: this
-    // EFFECTS: set game state to rolling dice, set new value for rolled dice if not already rolled
-    private void rollDice() {
-        gameState = GameState.ROLLING_DICE;
-        if (monopolyGame.isAlreadyRolled()) {
-            return;
-        }
-        rollAmount = new Random().nextInt(11) + 2; // 2-12
-    }
-
-    // MODIFIES: this
-    // EFFECTS: revert game state, and moves player with value from rolled dice
-    private void rolledDice() {
-        gameState = GameState.SELECT_TURN_OPTION;
-        if (monopolyGame.isAlreadyRolled()) {
-            return;
-        }
-        Player player = monopolyGame.getCurrentPlayer();
-        if (monopolyGame.movePlayer(player, rollAmount)) {
-            passGo();
-        }
-        monopolyGame.setAlreadyRolled(true);
-        if (autoSave) {
-            application.saveMonopolyGame(monopolyGame);
-        }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: set state to ending turn
-    private void endTurn() {
-        gameState = GameState.ENDING_TURN;
-    }
-
-    // MODIFIES: this
-    // EFFECTS: revert game state, and pass turn to next player
-    private void endedTurn() {
-        gameState = GameState.SELECT_TURN_OPTION;
-        if (!monopolyGame.isAlreadyRolled()) {
-            return;
-        }
-        monopolyGame.nextPlayer();
-        monopolyGame.setAlreadyRolled(false);
-        currentTurnOption = 0;
-        if (autoSave) {
-            application.saveMonopolyGame(monopolyGame);
-        }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: set state to passing go
-    private void passGo() {
-        gameState = GameState.PASSING_GO;
-    }
-
-    // MODIFIES: this
-    // EFFECTS: revert game state, and give reward balance after passing GO
-    private void passedGo() {
-        gameState = GameState.SELECT_TURN_OPTION;
-        monopolyGame.getCurrentPlayer().addBalance(200);
     }
 
     // REQUIRES: keyStroke != null
@@ -384,8 +207,6 @@ public class GameScene implements Scene {
     public boolean render() {
         renderer.setForegroundColor(TextColor.ANSI.WHITE);
 
-//        textGraphics.putString(4, 4, String.valueOf(numberOfPlayers));
-
         for (int i = 0; i < boardRender.size(); i++) {
             renderer.putString(2, i, boardRender.get(i));
         }
@@ -395,7 +216,7 @@ public class GameScene implements Scene {
 
         renderer.putString(9, 0, String.valueOf(monopolyGame.getCurrentRound()));
 
-        renderPlayerTurn(20, 8);
+        turnOptionState.render();
 
         renderState();
 
@@ -405,139 +226,12 @@ public class GameScene implements Scene {
         return true;
     }
 
-    // REQUIRES: textGraphics != null
     // EFFECTS: draw game state specific items
     void renderState() {
-        switch (gameState) {
-            case PAUSED:
-                renderPauseMenu(28, 12);
-                break;
-            case SAVED:
-                renderSaving(28, 12);
-                break;
-            case SELECT_TURN_OPTION:
-                break;
-            case ROLLING_DICE:
-                renderRollingDice(28, 12);
-                break;
-            case ENDING_TURN:
-                renderEndingTurn(28, 12);
-                break;
-            case PASSING_GO:
-                renderPassingGo(28, 12);
-                break;
+        if (gameState.getEnum() == GameState.SELECT_TURN_OPTION) {
+            return;
         }
-    }
-
-    // REQUIRES: textGraphics != null
-    // EFFECTS: draw pause menu
-    private void renderPauseMenu(int startX, int startY) {
-        Application.drawBox(startX, startY, 34, 10);
-        renderer.putString(startX + 2, startY, "Paused");
-        int offsetX = 2;
-        int offsetY = 2;
-        renderer.putString(startX + offsetX, startY + offsetY, getPauseOption(0) + "Resume");
-        renderer.setForegroundColor(TextColor.ANSI.WHITE);
-        renderer.putString(startX + offsetX, startY + offsetY + 1, getPauseOption(1) + "Save game");
-        renderer.putString(startX + offsetX, startY + offsetY + 2, getPauseOption(2) + "Quit to main menu");
-        renderer.putString(startX + offsetX, startY + offsetY + 3, getPauseOption(3) + "Quit to desktop");
-        if (pauseWarning) {
-            renderPauseWarning(startX + 6, startY + 4);
-        }
-    }
-
-    private void renderSaving(int startX, int startY) {
-        Application.drawBox(startX, startY, 34, 4);
-        renderer.putString(startX + 2, startY + 1, "Saved game");
-        renderer.putString(startX + 2, startY + 3, "Press any button to continue...");
-    }
-
-    // REQUIRES: textGraphics != null
-    // EFFECTS: draw save warning
-    private void renderPauseWarning(int startX, int startY) {
-        Application.drawBox(startX, startY, 23, 4);
-        renderer.putString(startX + 2, startY + 1, "Exit without saving?");
-        String no = (saveOption == 0 ? "> " : "  ") + "No";
-        String yes = (saveOption == 1 ? "> " : "  ") + "Yes";
-        renderer.putString(startX + 5, startY + 3, no + "    " + yes);
-
-    }
-
-    // EFFECTS: selection indicator for pause options
-    private String getPauseOption(int option) {
-        return (option == pauseOption) ? "> " : "  ";
-    }
-
-    // REQUIRES: textGraphics != null
-    // EFFECTS: draw player turn information
-    private void renderPlayerTurn(int startX, int startY) {
-        Player currentPlayer = monopolyGame.getCurrentPlayer();
-        renderer.putString(startX, startY, currentPlayer.getName() + "'s turn");
-
-        int offsetX = 2;
-        int offsetY = 8;
-
-        renderer.putString(startX, startY + 2, "Current balance: " + currentPlayer.getBalance());
-
-        playerTurnOptions(startX, startY, offsetX, offsetY);
-    }
-
-    // REQUIRES: textGraphics != null
-    // EFFECTS: draw turn options
-    private void playerTurnOptions(int startX, int startY, int offsetX, int offsetY) {
-        if (monopolyGame.isAlreadyRolled()) {
-            renderer.setForegroundColor(TextColor.ANSI.RED);
-        }
-        renderer.putString(startX + offsetX, startY + offsetY, getTurnOption(0) + "Roll dice");
-        renderer.setForegroundColor(TextColor.ANSI.WHITE);
-        renderer.putString(startX + offsetX, startY + offsetY + 1, getTurnOption(1) + "Mortgage");
-        renderer.putString(startX + offsetX, startY + offsetY + 2, getTurnOption(2) + "Lift mortgage");
-        renderer.putString(startX + offsetX, startY + offsetY + 3, getTurnOption(3) + "Sell property");
-        renderer.putString(startX + offsetX, startY + offsetY + 4, getTurnOption(4) + "Sell house");
-        if (!monopolyGame.isAlreadyRolled()) {
-            renderer.setForegroundColor(TextColor.ANSI.RED);
-        }
-        renderer.putString(startX + offsetX, startY + offsetY + 5, getTurnOption(5) + "End Turn");
-        renderer.setForegroundColor(TextColor.ANSI.WHITE);
-    }
-
-    // REQUIRES: textGraphics != null
-    // EFFECTS: draw rolling dice alert window
-    private void renderRollingDice(int startX, int startY) {
-        Application.drawBox(startX, startY, 34, 4);
-        if (!monopolyGame.isAlreadyRolled()) {
-            renderer.putString(startX + 2, startY + 1, "Rolled a " + rollAmount);
-        } else {
-            renderer.putString(startX + 2, startY + 1, "Player has already rolled");
-        }
-        renderer.putString(startX + 2, startY + 3, "Press any button to continue...");
-    }
-
-    // REQUIRES: textGraphics != null
-    // EFFECTS: draw ending turn alert window
-    private void renderEndingTurn(int startX, int startY) {
-        Application.drawBox(startX, startY, 34, 4);
-        if (monopolyGame.isAlreadyRolled()) {
-            renderer.putString(startX + 2, startY + 1, "It is now "
-                    + monopolyGame.getNextPlayer().getName() + "'s turn");
-        } else {
-            renderer.putString(startX + 2, startY + 1, "Please roll before ending turn");
-        }
-        renderer.putString(startX + 2, startY + 3, "Press any button to continue...");
-    }
-
-    // REQUIRES: textGraphics != null
-    // EFFECTS: draw passing go alert window
-    private void renderPassingGo(int startX, int startY) {
-        Application.drawBox(startX, startY, 34, 4);
-        renderer.putString(startX + 2, startY + 1,
-                monopolyGame.getCurrentPlayer().getName() + " passed GO, collect 200");
-        renderer.putString(startX + 2, startY + 3, "Press any button to continue...");
-    }
-
-    // EFFECTS: selection indicator for turn options
-    private String getTurnOption(int turnOption) {
-        return (currentTurnOption == turnOption) ? "> " : "  ";
+        gameState.render();
     }
 
     // REQUIRES: boardRender != null && board != null

@@ -1,7 +1,6 @@
 package ui;
 
 import com.googlecode.lanterna.Symbols;
-import com.googlecode.lanterna.TerminalSize;
 import model.MonopolyGame;
 import model.Player;
 import persistence.JsonReader;
