@@ -32,8 +32,7 @@ public class GameScene implements Scene {
     private GameState gameState;
     private GameState previousGameState;
 
-    private Application application;
-    private Screen screen;
+    private IRenderer renderer;
 
     private MonopolyGame monopolyGame;
     private ArrayList<Square> board;
@@ -55,8 +54,8 @@ public class GameScene implements Scene {
     GameScene(Application application, ArrayList<Player> players, String saveName) {
         gameState = GameState.SELECT_TURN_OPTION;
 
-        this.application = application;
-        screen = application.getScreen();
+        Application application = Application.getInstance();
+        renderer = application.getRenderer();
 
         application.setJsonWriter(saveName);
         if (players != null) {
@@ -126,12 +125,12 @@ public class GameScene implements Scene {
     // MODIFIES: this
     // EFFECTS: handles main input logic
     @Override
-    public boolean handleInput() throws IOException {
+    public boolean handleInput() throws Exception {
         boolean result = true;
-        KeyStroke keyStroke = screen.pollInput();
+        KeyStroke keyStroke = renderer.pollInput();
         if (keyStroke != null) {
             System.out.println(keyStroke);
-            screen.clear();
+            renderer.clear();
             result &= handleInputState(keyStroke);
             result &= handleDebugInput(keyStroke);
         }
@@ -139,29 +138,9 @@ public class GameScene implements Scene {
     }
 
     // EFFECTS: input behaviour for different game states
-    private boolean handleInputState(KeyStroke keyStroke) {
-        boolean result = true;
-        if (gameState == GameState.PAUSED) {
-            handlePauseButton(keyStroke);
-            handlePauseOptionArrowInput(keyStroke);
-            result &= handlePauseOptionEnterInput(keyStroke);
-        } else if (gameState == GameState.SAVED) {
-            saved();
-        } else if (gameState == GameState.SELECT_TURN_OPTION) {
-            handlePauseButton(keyStroke);
-            handleSelectTurnOptionArrowInput(keyStroke);
-            handleSelectTurnOptionEnterInput(keyStroke);
-        } else if (gameState == GameState.ROLLING_DICE) {
-            handlePauseButton(keyStroke);
-            rolledDice();
-        } else if (gameState == GameState.ENDING_TURN) {
-            handlePauseButton(keyStroke);
-            endedTurn();
-        } else if (gameState == GameState.PASSING_GO) {
-            handlePauseButton(keyStroke);
-            passedGo();
-        }
-        return result;
+    private boolean handleInputState(KeyStroke keyStroke) throws Exception {
+        handlePauseButton(keyStroke);
+        return gameState.handleInput(keyStroke);
     }
 
     // REQUIRES: keyStroke != null
@@ -403,25 +382,24 @@ public class GameScene implements Scene {
     // EFFECTS: handles drawing to the screen
     @Override
     public boolean render() {
-        TextGraphics textGraphics = screen.newTextGraphics();
-        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
+        renderer.setForegroundColor(TextColor.ANSI.WHITE);
 
 //        textGraphics.putString(4, 4, String.valueOf(numberOfPlayers));
 
         for (int i = 0; i < boardRender.size(); i++) {
-            textGraphics.putString(2, i, boardRender.get(i));
+            renderer.putString(2, i, boardRender.get(i));
         }
 
         // Go - 34, 77
         // 3 vertical, 7 horizontal
 
-        textGraphics.putString(9, 0, String.valueOf(monopolyGame.getCurrentRound()));
+        renderer.putString(9, 0, String.valueOf(monopolyGame.getCurrentRound()));
 
-        renderPlayerTurn(textGraphics, 20, 8);
+        renderPlayerTurn(20, 8);
 
-        renderState(textGraphics);
+        renderState();
 
-        boardRender(textGraphics, 79, 34, 7, 3, 5, 0,
+        boardRender(79, 34, 7, 3, 5, 0,
                 String.valueOf(Symbols.BLOCK_SOLID), null);
 
         return true;
@@ -429,59 +407,59 @@ public class GameScene implements Scene {
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draw game state specific items
-    void renderState(TextGraphics textGraphics) {
+    void renderState() {
         switch (gameState) {
             case PAUSED:
-                renderPauseMenu(textGraphics, 28, 12);
+                renderPauseMenu(28, 12);
                 break;
             case SAVED:
-                renderSaving(textGraphics, 28, 12);
+                renderSaving(28, 12);
                 break;
             case SELECT_TURN_OPTION:
                 break;
             case ROLLING_DICE:
-                renderRollingDice(textGraphics, 28, 12);
+                renderRollingDice(28, 12);
                 break;
             case ENDING_TURN:
-                renderEndingTurn(textGraphics, 28, 12);
+                renderEndingTurn(28, 12);
                 break;
             case PASSING_GO:
-                renderPassingGo(textGraphics, 28, 12);
+                renderPassingGo(28, 12);
                 break;
         }
     }
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draw pause menu
-    private void renderPauseMenu(TextGraphics textGraphics, int startX, int startY) {
-        Application.drawBox(textGraphics, startX, startY, 34, 10);
-        textGraphics.putString(startX + 2, startY, "Paused");
+    private void renderPauseMenu(int startX, int startY) {
+        Application.drawBox(startX, startY, 34, 10);
+        renderer.putString(startX + 2, startY, "Paused");
         int offsetX = 2;
         int offsetY = 2;
-        textGraphics.putString(startX + offsetX, startY + offsetY, getPauseOption(0) + "Resume");
-        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
-        textGraphics.putString(startX + offsetX, startY + offsetY + 1, getPauseOption(1) + "Save game");
-        textGraphics.putString(startX + offsetX, startY + offsetY + 2, getPauseOption(2) + "Quit to main menu");
-        textGraphics.putString(startX + offsetX, startY + offsetY + 3, getPauseOption(3) + "Quit to desktop");
+        renderer.putString(startX + offsetX, startY + offsetY, getPauseOption(0) + "Resume");
+        renderer.setForegroundColor(TextColor.ANSI.WHITE);
+        renderer.putString(startX + offsetX, startY + offsetY + 1, getPauseOption(1) + "Save game");
+        renderer.putString(startX + offsetX, startY + offsetY + 2, getPauseOption(2) + "Quit to main menu");
+        renderer.putString(startX + offsetX, startY + offsetY + 3, getPauseOption(3) + "Quit to desktop");
         if (pauseWarning) {
-            renderPauseWarning(textGraphics, startX + 6, startY + 4);
+            renderPauseWarning(startX + 6, startY + 4);
         }
     }
 
-    private void renderSaving(TextGraphics textGraphics, int startX, int startY) {
-        Application.drawBox(textGraphics, startX, startY, 34, 4);
-        textGraphics.putString(startX + 2, startY + 1, "Saved game");
-        textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
+    private void renderSaving(int startX, int startY) {
+        Application.drawBox(startX, startY, 34, 4);
+        renderer.putString(startX + 2, startY + 1, "Saved game");
+        renderer.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draw save warning
-    private void renderPauseWarning(TextGraphics textGraphics, int startX, int startY) {
-        Application.drawBox(textGraphics, startX, startY, 23, 4);
-        textGraphics.putString(startX + 2, startY + 1, "Exit without saving?");
+    private void renderPauseWarning(int startX, int startY) {
+        Application.drawBox(startX, startY, 23, 4);
+        renderer.putString(startX + 2, startY + 1, "Exit without saving?");
         String no = (saveOption == 0 ? "> " : "  ") + "No";
         String yes = (saveOption == 1 ? "> " : "  ") + "Yes";
-        textGraphics.putString(startX + 5, startY + 3, no + "    " + yes);
+        renderer.putString(startX + 5, startY + 3, no + "    " + yes);
 
     }
 
@@ -492,69 +470,69 @@ public class GameScene implements Scene {
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draw player turn information
-    private void renderPlayerTurn(TextGraphics textGraphics, int startX, int startY) {
+    private void renderPlayerTurn(int startX, int startY) {
         Player currentPlayer = monopolyGame.getCurrentPlayer();
-        textGraphics.putString(startX, startY, currentPlayer.getName() + "'s turn");
+        renderer.putString(startX, startY, currentPlayer.getName() + "'s turn");
 
         int offsetX = 2;
         int offsetY = 8;
 
-        textGraphics.putString(startX, startY + 2, "Current balance: " + currentPlayer.getBalance());
+        renderer.putString(startX, startY + 2, "Current balance: " + currentPlayer.getBalance());
 
-        playerTurnOptions(textGraphics, startX, startY, offsetX, offsetY);
+        playerTurnOptions(startX, startY, offsetX, offsetY);
     }
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draw turn options
-    private void playerTurnOptions(TextGraphics textGraphics, int startX, int startY, int offsetX, int offsetY) {
+    private void playerTurnOptions(int startX, int startY, int offsetX, int offsetY) {
         if (monopolyGame.isAlreadyRolled()) {
-            textGraphics.setForegroundColor(TextColor.ANSI.RED);
+            renderer.setForegroundColor(TextColor.ANSI.RED);
         }
-        textGraphics.putString(startX + offsetX, startY + offsetY, getTurnOption(0) + "Roll dice");
-        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
-        textGraphics.putString(startX + offsetX, startY + offsetY + 1, getTurnOption(1) + "Mortgage");
-        textGraphics.putString(startX + offsetX, startY + offsetY + 2, getTurnOption(2) + "Lift mortgage");
-        textGraphics.putString(startX + offsetX, startY + offsetY + 3, getTurnOption(3) + "Sell property");
-        textGraphics.putString(startX + offsetX, startY + offsetY + 4, getTurnOption(4) + "Sell house");
+        renderer.putString(startX + offsetX, startY + offsetY, getTurnOption(0) + "Roll dice");
+        renderer.setForegroundColor(TextColor.ANSI.WHITE);
+        renderer.putString(startX + offsetX, startY + offsetY + 1, getTurnOption(1) + "Mortgage");
+        renderer.putString(startX + offsetX, startY + offsetY + 2, getTurnOption(2) + "Lift mortgage");
+        renderer.putString(startX + offsetX, startY + offsetY + 3, getTurnOption(3) + "Sell property");
+        renderer.putString(startX + offsetX, startY + offsetY + 4, getTurnOption(4) + "Sell house");
         if (!monopolyGame.isAlreadyRolled()) {
-            textGraphics.setForegroundColor(TextColor.ANSI.RED);
+            renderer.setForegroundColor(TextColor.ANSI.RED);
         }
-        textGraphics.putString(startX + offsetX, startY + offsetY + 5, getTurnOption(5) + "End Turn");
-        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
+        renderer.putString(startX + offsetX, startY + offsetY + 5, getTurnOption(5) + "End Turn");
+        renderer.setForegroundColor(TextColor.ANSI.WHITE);
     }
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draw rolling dice alert window
-    private void renderRollingDice(TextGraphics textGraphics, int startX, int startY) {
-        Application.drawBox(textGraphics, startX, startY, 34, 4);
+    private void renderRollingDice(int startX, int startY) {
+        Application.drawBox(startX, startY, 34, 4);
         if (!monopolyGame.isAlreadyRolled()) {
-            textGraphics.putString(startX + 2, startY + 1, "Rolled a " + rollAmount);
+            renderer.putString(startX + 2, startY + 1, "Rolled a " + rollAmount);
         } else {
-            textGraphics.putString(startX + 2, startY + 1, "Player has already rolled");
+            renderer.putString(startX + 2, startY + 1, "Player has already rolled");
         }
-        textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
+        renderer.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draw ending turn alert window
-    private void renderEndingTurn(TextGraphics textGraphics, int startX, int startY) {
-        Application.drawBox(textGraphics, startX, startY, 34, 4);
+    private void renderEndingTurn(int startX, int startY) {
+        Application.drawBox(startX, startY, 34, 4);
         if (monopolyGame.isAlreadyRolled()) {
-            textGraphics.putString(startX + 2, startY + 1, "It is now "
+            renderer.putString(startX + 2, startY + 1, "It is now "
                     + monopolyGame.getNextPlayer().getName() + "'s turn");
         } else {
-            textGraphics.putString(startX + 2, startY + 1, "Please roll before ending turn");
+            renderer.putString(startX + 2, startY + 1, "Please roll before ending turn");
         }
-        textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
+        renderer.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
     // REQUIRES: textGraphics != null
     // EFFECTS: draw passing go alert window
-    private void renderPassingGo(TextGraphics textGraphics, int startX, int startY) {
-        Application.drawBox(textGraphics, startX, startY, 34, 4);
-        textGraphics.putString(startX + 2, startY + 1,
+    private void renderPassingGo(int startX, int startY) {
+        Application.drawBox(startX, startY, 34, 4);
+        renderer.putString(startX + 2, startY + 1,
                 monopolyGame.getCurrentPlayer().getName() + " passed GO, collect 200");
-        textGraphics.putString(startX + 2, startY + 3, "Press any button to continue...");
+        renderer.putString(startX + 2, startY + 3, "Press any button to continue...");
     }
 
     // EFFECTS: selection indicator for turn options
@@ -564,25 +542,23 @@ public class GameScene implements Scene {
 
     // REQUIRES: boardRender != null && board != null
     // EFFECTS: draw board from board model
-    private void boardRender(TextGraphics textGraphics,
-                             int startX, int startY, int horizontalSize, int verticalSize,
+    private void boardRender(int startX, int startY, int horizontalSize, int verticalSize,
                              int horizontalOffset, int verticalOffset,
                              String s, TextColor color) {
         int length = (board.size() + 1) / 4;
-        boardRenderRows(textGraphics, startX, startY, length,
+        boardRenderRows(startX, startY, length,
                 -horizontalSize, 0, horizontalOffset, verticalOffset, 0, s, color);
-        boardRenderRows(textGraphics, startX - length * horizontalSize, startY, length,
+        boardRenderRows(startX - length * horizontalSize, startY, length,
                 0, -verticalSize, horizontalOffset, verticalOffset, length, s, color);
-        boardRenderRows(textGraphics, startX - length * horizontalSize, startY - length * verticalSize, length,
+        boardRenderRows(startX - length * horizontalSize, startY - length * verticalSize, length,
                 horizontalSize, 0, horizontalOffset, verticalOffset, length * 2, s, color);
-        boardRenderRows(textGraphics, startX, startY - (length - 1) * verticalSize, length - 1,
+        boardRenderRows(startX, startY - (length - 1) * verticalSize, length - 1,
                 0, verticalSize, horizontalOffset, verticalOffset, length * 3 + 1, s, color);
     }
 
     // REQUIRES: boardRender != null && board != null
     // EFFECTS: draw rows from board model
-    private void boardRenderRows(TextGraphics textGraphics,
-                                 int startX, int startY, int length,
+    private void boardRenderRows(int startX, int startY, int length,
                                  int horizontalMove, int verticalMove,
                                  int horizontalOffset, int verticalOffset, int iterateStart,
                                  String s, TextColor c) {
@@ -601,36 +577,35 @@ public class GameScene implements Scene {
                 }
                 houses = propertySquare.getNumberOfHouses();
             }
-            squareRender(textGraphics, square, isProperty, startX, startY, horizontalMove, verticalMove,
+            squareRender(square, isProperty, startX, startY, horizontalMove, verticalMove,
                     horizontalOffset, verticalOffset, s, color, i, houses);
         }
     }
 
     // REQUIRES: boardRender != null && board != null
     // EFFECTS: draw individual square details
-    private void squareRender(TextGraphics textGraphics,
-                              Square square, boolean isProperty,
+    private void squareRender(Square square, boolean isProperty,
                               int startX, int startY,
                               int horizontalMove, int verticalMove,
                               int horizontalOffset, int verticalOffset,
                               String s, TextColor color, int i, int houses) {
         int drawX = startX + i * horizontalMove;
         int drawY = startY + i * verticalMove;
-        textGraphics.setForegroundColor(color);
+        renderer.setForegroundColor(color);
 
         if (isProperty) {
-            textGraphics.putString(drawX + horizontalOffset, drawY + verticalOffset, s);
+            renderer.putString(drawX + horizontalOffset, drawY + verticalOffset, s);
             if (houses > 0) {
-                textGraphics.putString(drawX + horizontalOffset, drawY + verticalOffset + 1,
+                renderer.putString(drawX + horizontalOffset, drawY + verticalOffset + 1,
                         houses > 4 ? "H" : String.valueOf(houses));
             }
         }
 
         int index = 0;
         int maxInLine = 4;
-        textGraphics.setForegroundColor(TextColor.ANSI.WHITE);
+        renderer.setForegroundColor(TextColor.ANSI.WHITE);
         for (Player player : square.getPlayers()) {
-            textGraphics.putString(drawX + index % maxInLine, drawY + index / maxInLine,
+            renderer.putString(drawX + index % maxInLine, drawY + index / maxInLine,
                     String.valueOf(player.getIndex() + 1));
             index++;
         }

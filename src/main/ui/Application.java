@@ -2,13 +2,12 @@ package ui;
 
 import com.googlecode.lanterna.Symbols;
 import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.screen.Screen;
-import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import model.MonopolyGame;
 import model.Player;
 import persistence.JsonReader;
 import persistence.JsonWriter;
+import ui.renderer.IRenderer;
+import ui.renderer.LanternaRenderer;
 
 import java.util.ArrayList;
 
@@ -16,7 +15,21 @@ import java.util.ArrayList;
 public class Application {
     private static final String SAVES = "./data/saves/";
 
-    private Screen screen;
+    private static final Application instance;
+    private static IRenderer renderer;
+
+    static {
+        try {
+            instance = new Application(94, 40);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Application getInstance() {
+        return instance;
+    }
+
     private Scene scene;
 
     private MainMenu mainMenu;
@@ -26,13 +39,11 @@ public class Application {
     private JsonReader jsonReader;
 
     // EFFECTS: constructor initializes screen dimensions
-    Application(int screenWidth, int screenHeight) throws Exception {
-        TerminalSize terminalSize = new TerminalSize(screenWidth, screenHeight);
-        screen = new DefaultTerminalFactory().setInitialTerminalSize(terminalSize).createScreen();
+    private Application(int screenWidth, int screenHeight) throws Exception {
+        renderer = new LanternaRenderer(screenWidth, screenHeight);
+    }
 
-        screen.startScreen();
-        screen.setCursorPosition(null); // turn off cursor
-
+    public void init() {
         createMainMenu();
         setMainMenu();
     }
@@ -43,23 +54,23 @@ public class Application {
 
     // MODIFIES: textGraphics
     // EFFECTS: draws box with ANSI characters
-    public static void drawBox(TextGraphics textGraphics, int x, int y, int width, int height) {
-        textGraphics.putString(x, y, "╭");
-        textGraphics.putString(x + width, y, "╮");
-        textGraphics.putString(x, y + height, "╰");
-        textGraphics.putString(x + width, y + height, "╯");
+    public static void drawBox(int x, int y, int width, int height) {
+        renderer.putString(x, y, "╭");
+        renderer.putString(x + width, y, "╮");
+        renderer.putString(x, y + height, "╰");
+        renderer.putString(x + width, y + height, "╯");
         for (int i = 1; i < width; i++) {
             for (int j = 1; j < height; j++) {
-                textGraphics.putString(x + i, y + j, " ");
+                renderer.putString(x + i, y + j, " ");
             }
         }
         for (int i = 1; i < height; i++) {
-            textGraphics.putString(x, y + i, String.valueOf(Symbols.SINGLE_LINE_VERTICAL));
-            textGraphics.putString(x + width, y + i, String.valueOf(Symbols.SINGLE_LINE_VERTICAL));
+            renderer.putString(x, y + i, String.valueOf(Symbols.SINGLE_LINE_VERTICAL));
+            renderer.putString(x + width, y + i, String.valueOf(Symbols.SINGLE_LINE_VERTICAL));
         }
         for (int i = 1; i < width; i++) {
-            textGraphics.putString(x + i, y, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
-            textGraphics.putString(x + i, y + height, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
+            renderer.putString(x + i, y, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
+            renderer.putString(x + i, y + height, String.valueOf(Symbols.SINGLE_LINE_HORIZONTAL));
         }
     }
 
@@ -71,14 +82,14 @@ public class Application {
             run = scene.handleInput()
                     && scene.update()
                     && scene.render();
-            screen.refresh();
+            renderer.refresh();
         }
 
-        screen.close();
+        renderer.close();
     }
 
-    public Screen getScreen() {
-        return screen;
+    public IRenderer getRenderer() {
+        return renderer;
     }
 
     private void setScene(Scene scene) {
@@ -88,7 +99,7 @@ public class Application {
     // MODIFIES: this
     // EFFECTS: creates new instance of main menu
     public void createMainMenu() {
-        mainMenu = new MainMenu(this);
+        mainMenu = new MainMenu();
     }
 
     // REQUIRES: mainMenu != null
@@ -101,7 +112,7 @@ public class Application {
     // MODIFIES: this
     // EFFECTS: creates new instance of game with provided list of players
     public void createGameScene(ArrayList<Player> players, String saveName) {
-        gameScene = new GameScene(this, players, saveName);
+        gameScene = new GameScene(players, saveName);
     }
 
     // REQUIRES: gameScene != null
